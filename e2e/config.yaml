@@ -1,0 +1,49 @@
+log:
+  logLevel: debug
+  logFile: logs/e2e.log
+host:
+  kubecubeHost: https://kubecube:7443
+  consoleHost: http://webconsole:9081
+e2eInit:
+  pivotCluster: pivot-cluster # 管控集群名字
+  targetCluster: pivot-cluster # 测试计算集群名字
+  tenant: cube-e2e-tenant-1 # 测试租户
+  project: cube-e2e-project-1 # 测试项目cd
+  namespace: cube-e2e-ns # 测试空间
+  multiuser: # 测试用户信息
+    admin: admin
+    adminPassword: admin123456
+    tenantAdmin: e2etenantadmin
+    tenantAdminPassword: admin-123456
+    projectAdmin: e2eprojectadmin
+    projectAdminPassword: admin-123456
+    user: e2euser
+    userPassword: admin-123456
+timeout:
+  waitInterval: 5           # 间隔5秒尝试一次
+  waitTimeout: 60           # 最多等待不超过30秒，一般与waitInterval做异步等待重试
+  httpRequestTimeout: 10    # http请求超时10秒
+pv:                             # 默认不启动 pv 相关测试
+  enabled: false
+cloudshell:
+  enabled: true
+workload:
+  cronjob: false
+  daemonSet: false
+  deployment: true
+  job: false
+  statefulSet: false
+  nodeHostName: node-34250979-38
+  nodeHostIp: 192.168.15.219
+  storageClass: localstorage-class
+image:
+  testImage: harbor.cloud.netease.com/qztest/nginxdemos-hello:plain-text-multi
+hub:
+  registry: XXX
+  project: XXX
+  username: XXX
+  password: XXX
+  email: XXX
+sys:
+  namespace: kubecube-system
+  cm-name: kubecube-e2e-config

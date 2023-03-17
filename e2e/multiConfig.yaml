@@ -1,0 +1,874 @@
+allUsers:
+    - admin
+    - projectAdmin
+    - tenantAdmin
+    - user
+testMap:
+    - testName: CloudShell检查
+      continueIfError: false
+      steps:
+        - name: CloudShell检查
+          description: CloudShell检查
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+      skipUsers: []
+    - testName: '[集群信息]集群列表检查检查'
+      continueIfError: false
+      steps:
+        - name: 集群列表检查
+          description: 1. 通过接口获取集群列表, 并和集群信息进行比较，查看数量和名称是否相符
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+      skipUsers: []
+    - testName: '[配置][9387667]ConfigMap检查'
+      continueIfError: false
+      steps:
+        - name: 创建CM
+          description: |-
+            1. 创建ConfigMap， 设置多个数据
+            key1=value1
+            key2=value2
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 创建pod并且查看
+          description: |-
+            2. 创建负载》容器》高级模式，设置环境变量Value类型为ConfigMap
+            3. 通过webconsole访问容器查看环境变量env
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 设置CM
+          description: 4. 设置ConfigMap
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 删除CM
+          description: 5. 删除ConfigMap
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 删除pod
+          description: 6. 删除Pod
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+      skipUsers: []
+    - testName: '[配置][9387665]Opaque类型秘钥检查'
+      continueIfError: false
+      steps:
+        - name: 创建secret
+          description: |-
+            1. 创建Opaque类型秘钥secret2，
+            username=admin
+            passwd=123456
+            【注意】：实际填入输入框值为base64编码格式，分别输入：
+            username=YWRtaW4=
+            passwd=MTIzNDU2
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 创建挂载secret volume的pod
+          description: |-
+            2. 负载挂载secret
+            创建负载》容器》高级模式中挂载数据卷选择secret类型，将secret2挂载到/mnt/secret目录
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 创建注入secret env的pod
+          description: |-
+            3. 负载从secret中读取环境变量
+            容器》高级模式》设置容器环境变量，选择Value类型为Secret
+            分别添加username、passwd
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 删除挂载secret volume的pod
+          description: 4. 删除挂载secret volume的pod
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 删除注入secret env的pod
+          description: 5. 删除注入secret env的pod
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 删除secret
+          description: 6. 删除secret
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+      skipUsers: []
+    - testName: '[配置][9387664]DockerConfigJson类型秘钥检查'
+      continueIfError: false
+      steps:
+        - name: 创建secret
+          description: |
+            1. 创建DockerConfigJson类型秘钥secret1
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 创建pod
+          description: 2. 创建负载指定secret1
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 删除pod
+          description: 3. 删除pod
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 删除secret
+          description: 4. 删除secret
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+      skipUsers: []
+    - testName: '[自定义资源CRD][9386694]自定义资源CRD检查'
+      continueIfError: false
+      steps:
+        - name: 创建CRD
+          description: 1. 创建自定义资源crontabs.stable.example.comp
+          expectPass:
+            admin: true
+            projectAdmin: false
+            tenantAdmin: false
+            user: false
+        - name: 创建 CR
+          description: |-
+            2. 进入空间级别》crontabs.stable.example.com》选择v1版本，创建crontabs.stable.example.com实例
+            3. 创建 CR
+          expectPass:
+            admin: true
+            projectAdmin: false
+            tenantAdmin: false
+            user: false
+        - name: 设置 CR
+          description: 4.设置CRD实例
+          expectPass:
+            admin: true
+            projectAdmin: false
+            tenantAdmin: false
+            user: false
+        - name: 删除 CR
+          description: 5. 删除CRD实例
+          expectPass:
+            admin: true
+            projectAdmin: false
+            tenantAdmin: false
+            user: false
+        - name: 删除 CRD
+          description: 6. 删除CRD crontabs.stable.example.com
+          expectPass:
+            admin: true
+            projectAdmin: false
+            tenantAdmin: false
+            user: false
+      skipUsers: []
+    - testName: '[ingress][9386667]创建负载均衡检查'
+      continueIfError: false
+      steps:
+        - name: 创建ingress成功
+          description: '创建ingress1: 域名设置为poctest; 路径设置为/test，选中服务service1，端口选择8080'
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 查询成功，查询结果列表长度为1
+          description: 查询ingress列表
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 更新成功
+          description: 更新ingress1的配置路径设置为/test2
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 查询成功，查询结果与更新信息一致
+          description: 查询ingress1的详情
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 删除成功
+          description: 删除ingress1
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+      skipUsers: []
+    - testName: '[ingress][9386673]负载均衡事件检查'
+      continueIfError: false
+      steps:
+        - name: 可罗列所有的 service events
+          description: 查看ingress事件
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+      skipUsers: []
+    - testName: '[ingress][9386668]负载均衡功能点检查'
+      continueIfError: false
+      steps:
+        - name: 1. 创建ingress2，设置调度算法为round robin
+          description: 1. 创建ingress2，设置调度算法为round robin
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 2. 客户端访问此ingress
+          description: 2. 客户端访问此ingress
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 3. 设置ingress会话保持开启，设置任意Cookie名称
+          description: 3. 设置ingress会话保持开启，设置任意Cookie名称
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 4. 重复第2步
+          description: 4. 重复第2步
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 删除成功
+          description: 删除ingress2
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+      skipUsers: []
+    - testName: '[节点信息]集群节点列表检查检查'
+      continueIfError: false
+      steps:
+        - name: 管控集群节点检查
+          description: 1. 通过接口获取管控集群节点列表, 并和节点信息进行比较，查看数量和名称是否相符
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+      skipUsers: []
+    - testName: '[service][9386657]服务检查的增删改查'
+      continueIfError: false
+      steps:
+        - name: 创建service1成功
+          description: 创建服务service1，标签选择器选择简单模式，关联负载deploy1
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 查询成功，查询结果与创建内容一致
+          description: 查询service1详情
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 创建service2成功，service2的ClusterIP为None
+          description: 创建Headless类型服务service2，关联负载deploy2
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 空间下的svc总数为2
+          description: 查询空间下的服务列表
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 更新配置生效
+          description: 更新service1，端口配置增加 50000：50000
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 删除成功，查询列表结果与删除动作一致
+          description: 删除service1 service2
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+      skipUsers: []
+    - testName: '[service][9386664]服务事件检查'
+      continueIfError: false
+      steps:
+        - name: 可罗列所有的 service events
+          description: 查看服务事件
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+      skipUsers: []
+    - testName: '[service][9386659]服务对容器云外暴露访问检查'
+      continueIfError: false
+      steps:
+        - name: 2.可访问到负载部署的应用; 3.curl IP1:1111不通，curl IP1:1114可访问; 4.无对外设置端口curl IP1:1114亦不可访问
+          description: ""
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+      skipUsers:
+        - user
+        - tenantAdmin
+        - projectAdmin
+    - testName: '[存储][9387658]存储声明创建检查'
+      continueIfError: false
+      steps:
+        - name: create PVC1
+          description: |-
+            1. 进入容器云》存储声明
+            2. 创建存储声明pvc1，容量10Gi、创建方式动态持久化存储、独占读写模式
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: create PVC2
+          description: 3. 创建存储声明pvc2，容量20Gi、创建方式动态持久化存储、只读共享
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: create pod
+          description: ""
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: delete pod
+          description: ""
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: delete pvc
+          description: 4. 删除pvc
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: delete pv
+          description: 5. 删除pv
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+      skipUsers: []
+    - testName: '[配额和空间管理][9382713]租户配额管理'
+      continueIfError: false
+      steps:
+        - name: 正常调整配额应该成功
+          description: |-
+            1.查看租户配额
+            2.调节cpu、mem、storage数值
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+      skipUsers:
+        - projectAdmin
+        - tenantAdmin
+        - user
+    - testName: '[工作负载][9478777]CronJob检查'
+      continueIfError: false
+      steps:
+        - name: 创建实例hellocronjob
+          description: 进入容器云》工作负载》CronJob创建实例hellocronjob填入以下信息：镜像：选择library镜像如tomcat高级》启动命令：- /bin/bash- '-c'- 'date;echo  Hello from the Kubernetes cluste'定时规则》定时调度设置：*/1 * * * *其他配置任选后提交
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: CronJob创建成功
+          description: CronJob创建成功
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: CronJob列表信息准确，任务列表、事件信息准确
+          description: 查看CronJob列表信息
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: Job列表中有新增Job且状态为执行完成
+          description: Job列表中有新增Job且状态为执行完成
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 设置CronJob配置生效
+          description: 设置CronJob配置生效
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 工作负载详情检查
+          description: 与配置一致，信息准确
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: CronJob和副本事件前端页面和后台k8s命令显示一致
+          description: 通过前台界面和后台k8s命令查看CronJob和副本事件展示是否一致
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: clear cornjob
+          description: clear cornjob
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+      skipUsers: []
+    - testName: '[工作负载][9478778]Job检查'
+      continueIfError: false
+      steps:
+        - name: 创建实例hellojob
+          description: 进入容器云》工作负载》Job创建实例hellojob填入以下信息：镜像：选择library镜像如tomcat高级》启动命令：- /bin/bash- '-c'- 'date;echo  Hello from the Kubernetes cluste'
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: Job创建成功
+          description: Job创建成功
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: Job列表中有新增Job且状态为执行完成，其他信息准确
+          description: 查看Job列表信息
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 与配置一致，信息准确
+          description: 检查副本详情页信息
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 都可以查看到准确的对应信息
+          description: 查看副本基本信息
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 正确返回负载各项性能指标
+          description: 查看副本的性能指标
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: Job和副本的conditions与k8s查询一致
+          description: 查看Job和副本的condition详情与k8s的是否一致
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: Job事件前端页面和后台k8s命令显示一致
+          description: 查看Job事件
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 副本事件前端页面和后台k8s命令显示一致
+          description: 查看副本事件
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: clean job
+          description: clean job
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+      skipUsers: []
+    - testName: '[工作负载][9386601]创建Deployment工作负载挂载卷'
+      continueIfError: false
+      steps:
+        - name: 创建工作负载
+          description: 创建工作负载
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 工作负载最终创建成功
+          description: 工作负载最终创建成功
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 查看工作负载》日志一直输出 hello
+          description: 查看工作负载》日志一直输出 hello
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 容器内查看pvc1 挂载到了/mnt1/目录；/mnt2/目录无法进行写入（只读共享类型）
+          description: 容器内查看pvc1 挂载到了/mnt1/目录；/mnt2/目录无法进行写入（只读共享类型）
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 与配置一致，信息准确
+          description: 检查副本详情页信息
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 都可以查看到准确的对应信息
+          description: |-
+            查看副本基本信息
+            3、查看副本事件
+            4、查看容器日志
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 正确返回负载各项性能指标
+          description: 查看副本的性能指标
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: Deployment和副本的conditions与k8s查询一致
+          description: 查看Deployment和副本的condition详情与k8s的是否一致
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: Deployment事件前端页面和后台k8s命令显示一致件
+          description: 查看Deployment事件
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 副本事件前端页面和后台k8s命令显示一致
+          description: 查看副本事件
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 查看工作负载更新成功，配置生效
+          description: 更新负载配置
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 查看最终副本详情生成4个副本，副本运行正常
+          description: 更新副本个数为4
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 调整负载副本数
+          description: 更新副本个数为1
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 自动伸缩设置
+          description: 创建hap，设置触发条件memory为1024，保证一定会达到条件
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 容器副本数扩容到2
+          description: ""
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: clean hpa
+          description: ""
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: clean deploy
+          description: ""
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+      skipUsers: []
+    - testName: '[工作负载][9478763]创建StatefulSet工作负载挂载卷'
+      continueIfError: false
+      steps:
+        - name: 创建Statefulset
+          description: ""
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 创建StatefulSet工作负载挂载卷
+          description: 检查容器挂载pv1到/mnt1/成功
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: StatefulSet健康检查部署策略
+          description: 1.负载正常运行，检查负载副本为sts1-0、sts1-12.查看副本sts1-0、sts1-1均调度到此节点上
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 都可以查看到准确的对应信息
+          description: 查看容器详情
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 与配置一致，信息准确
+          description: ""
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 正确返回负载各项性能指标
+          description: 查看副本的性能指标
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: Statefulset和副本的conditions与k8s查询一致
+          description: 查看Statefulset和副本的condition详情与k8s的是否一致
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: Statefulset事件前端页面和后台k8s命令显示一致
+          description: 查看Statefulset事件
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 副本事件前端页面和后台k8s命令显示一致
+          description: 查看副本事件
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 调整负载副本数
+          description: 更新副本个数为1
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 自动伸缩设置
+          description: 创建hap，设置触发条件memory为1024，保证一定会达到条件
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 容器副本数扩容到2
+          description: ""
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: clean statefulSet hpa
+          description: clean statefulSet
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: clean statefulSet
+          description: clean statefulSet
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+      skipUsers: []
+    - testName: '[工作负载][9478780]创建DaemonSet'
+      continueIfError: false
+      steps:
+        - name: 创建DaemonSet
+          description: 1、进入工作负载》Daemonsets菜单，点击部署2、填写正确的负载名称、容器名称、镜像名称，点击立即创建
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: 创建DaemonSet成功
+          description: 创建成功
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 列表中展示创建的DaemonSet
+          description: ""
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 都可以查看到准确的对应信息
+          description: 查看副本基本信息
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: DaemonSet事件前端页面和后台k8s命令显示一致
+          description: 查看DaemonSet事件
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 副本事件前端页面和后台k8s命令显示一致
+          description: 查看副本事件
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 正确返回负载各项性能指标
+          description: 查看副本的性能指标
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: DaemonSet和副本的conditions与k8s查询一致
+          description: 查看副本的condition详情与k8s的是否一致
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+        - name: 修改DaemonSet
+          description: 以上修改均能成功
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: false
+        - name: clean DaemonSet
+          description: clean DaemonSet
+          expectPass:
+            admin: true
+            projectAdmin: true
+            tenantAdmin: true
+            user: true
+      skipUsers: []
