@@ -9,6 +9,7 @@ import (
 type AuthUser struct {
 	Username string
 	Password string
+	Token    string
 	Cookie   *http.Cookie
 }
 
