@@ -2,49 +2,43 @@ package framework
 
 import (
 	"crypto/tls"
-	"encoding/json"
-	"fmt"
 	"net/http"
-	"net/url"
-	"strings"
+	"sync"
 	"time"
 
+	httputil "github.com/kubecube-io/kubecube-e2e/e2e/framework/http"
 	"github.com/kubecube-io/kubecube/pkg/clog"
 )
 
-type AuthUser struct {
-	Username string
-	Password string
-	Cookie   *http.Cookie
-}
-
 type HttpHelper struct {
-	Admin        AuthUser
-	TenantAdmin  AuthUser
-	ProjectAdmin AuthUser
-	User         AuthUser
+	Admin        httputil.AuthUser
+	TenantAdmin  httputil.AuthUser
+	ProjectAdmin httputil.AuthUser
+	User         httputil.AuthUser
 	Client       http.Client
 }
 
 var httphelper *HttpHelper
+var once sync.Once
 
 // single mode
 func NewSingleHttpHelper() *HttpHelper {
 	if httphelper != nil {
 		return httphelper
 	}
-
-	httphelper = NewHttpHelper().Login()
+	once.Do(func() {
+		httphelper = NewHttpHelper().Login(LoginType)
+	})
 	return httphelper
 }
 
 func NewHttpHelper() *HttpHelper {
 
 	h := &HttpHelper{
-		Admin:        AuthUser{Username: Admin, Password: AdminPassword},
-		TenantAdmin:  AuthUser{Username: TenantAdmin, Password: TenantAdminPassword},
-		ProjectAdmin: AuthUser{Username: ProjectAdmin, Password: ProjectAdminPassword},
-		User:         AuthUser{Username: User, Password: UserPassword},
+		Admin:        httputil.AuthUser{Username: Admin, Password: AdminPassword},
+		TenantAdmin:  httputil.AuthUser{Username: TenantAdmin, Password: TenantAdminPassword},
+		ProjectAdmin: httputil.AuthUser{Username: ProjectAdmin, Password: ProjectAdminPassword},
+		User:         httputil.AuthUser{Username: User, Password: UserPassword},
 	}
 
 	tr := &http.Transport{
@@ -57,38 +51,13 @@ func NewHttpHelper() *HttpHelper {
 	return h
 }
 
-func (h *HttpHelper) Login() *HttpHelper {
-	h.LoginByUser(&h.Admin)
-	h.LoginByUser(&h.TenantAdmin)
-	h.LoginByUser(&h.ProjectAdmin)
-	h.LoginByUser(&h.User)
+func (h *HttpHelper) Login(login string) *HttpHelper {
+	loginFunc := httputil.GetLoginMap(login)
+	_ = loginFunc(&h.Admin)
+	_ = loginFunc(&h.TenantAdmin)
+	_ = loginFunc(&h.ProjectAdmin)
+	_ = loginFunc(&h.User)
 	return h
-}
-
-func (h *HttpHelper) LoginByUser(user *AuthUser) error {
-	postBody := map[string]string{
-		"name":      user.Username,
-		"password":  user.Password,
-		"loginType": "normal",
-	}
-	postBodyJson, err := json.Marshal(postBody)
-	if err != nil {
-		clog.Error("login fail, marshal post body fail, %v", err)
-		return err
-	}
-	url := fmt.Sprintf("%s/%s", KubecubeHost, "/api/v1/cube/login")
-	resp, err := h.Request("POST", url, string(postBodyJson), nil)
-	if err != nil {
-		clog.Error("login fail, error: %v", err)
-		return err
-	}
-	cookies := resp.Cookies()
-	if len(cookies) < 1 {
-		clog.Error("get cookie error")
-		return fmt.Errorf("get cookie error")
-	}
-	user.Cookie = cookies[0]
-	return nil
 }
 
 // get
@@ -132,22 +101,11 @@ func (h *HttpHelper) RequestByUser(method, urlVal, data, user string, header map
 
 // build request
 func (h *HttpHelper) BuildRequest(method, urlVal, data, user string, header map[string]string) (*http.Request, error) {
-	var req *http.Request
-	var err error
-
-	urlArr := strings.Split(urlVal, "?")
-	if len(urlArr) == 2 {
-		urlVal = urlArr[0] + "?" + url.PathEscape(urlArr[1])
-	}
-	if data == "" {
-		req, err = http.NewRequest(method, urlVal, nil)
-	} else {
-		req, err = http.NewRequest(method, urlVal, strings.NewReader(data))
-	}
+	req, err := httputil.BuildRequest(method, urlVal, data, header)
 	if err != nil {
+		clog.Warn("build request error: %v", err.Error())
 		return nil, err
 	}
-
 	switch user {
 	case Admin:
 		req.AddCookie(h.Admin.Cookie)
@@ -157,13 +115,6 @@ func (h *HttpHelper) BuildRequest(method, urlVal, data, user string, header map[
 		req.AddCookie(h.ProjectAdmin.Cookie)
 	case User:
 		req.AddCookie(h.User.Cookie)
-	}
-
-	if _, ok := header["Content-Type"]; !ok {
-		req.Header.Add("Content-Type", "application/json")
-	}
-	for k, v := range header {
-		req.Header.Add(k, v)
 	}
 
 	return req, nil

@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	e2econstants "github.com/kubecube-io/kubecube-e2e/util/constants"
 	v1 "github.com/kubecube-io/kubecube/pkg/apis/cluster/v1"
 	"github.com/kubecube-io/kubecube/pkg/clients"
 	"github.com/kubecube-io/kubecube/pkg/clog"
@@ -73,6 +74,7 @@ var (
 
 	KubeCubeSystem string
 	KubeCubeE2ECM  string
+	LoginType      string
 )
 
 // InitGlobalV 初始化全局变量
@@ -153,6 +155,10 @@ func InitGlobalV() error {
 
 	KubeCubeSystem = viper.GetString("sys.namespace")
 	KubeCubeE2ECM = viper.GetString("sys.cm-name")
+	LoginType = viper.GetString("sys.login-type")
+	if len(LoginType) == 0 {
+		LoginType = e2econstants.GeneralLoginType
+	}
 
 	localCli := clients.Interface().Kubernetes(constants.LocalCluster)
 	if localCli == nil {
