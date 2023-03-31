@@ -1,4 +1,4 @@
-package http
+package framework
 
 import (
 	"net/http"
@@ -15,7 +15,7 @@ type AuthUser struct {
 
 type LoginByUser func(user *AuthUser) error
 
-var loginMap map[string]LoginByUser
+var loginMap = make(map[string]LoginByUser)
 
 func Register(key string, loginFunc LoginByUser) {
 	loginMap[key] = loginFunc

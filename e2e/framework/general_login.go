@@ -1,16 +1,15 @@
-package http
+package framework
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
 	"github.com/kubecube-io/kubecube-e2e/util/constants"
 	"github.com/kubecube-io/kubecube/pkg/clog"
 )
 
-var client = http.DefaultClient
+var httpclient = http.DefaultClient
 
 func init() {
 	Register(constants.GeneralLoginType, GeneralLogin)
@@ -27,13 +26,13 @@ func GeneralLogin(user *AuthUser) error {
 		clog.Error("login fail, marshal post body fail, %v", err)
 		return err
 	}
-	url := fmt.Sprintf("%s/%s", framework.KubecubeHost, "/api/v1/cube/login")
+	url := fmt.Sprintf("%s/%s", KubecubeHost, "/api/v1/cube/login")
 	req, err := BuildRequest(http.MethodPost, url, string(postBodyJson), nil)
 	if err != nil {
 		clog.Error("login fail, error: %v", err)
 		return err
 	}
-	resp, err := client.Do(req)
+	resp, err := httpclient.Do(req)
 	if err != nil {
 		clog.Error("login fail, error: %v", err)
 		return err

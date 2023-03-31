@@ -6,15 +6,14 @@ import (
 	"sync"
 	"time"
 
-	httputil "github.com/kubecube-io/kubecube-e2e/e2e/framework/http"
 	"github.com/kubecube-io/kubecube/pkg/clog"
 )
 
 type HttpHelper struct {
-	Admin        httputil.AuthUser
-	TenantAdmin  httputil.AuthUser
-	ProjectAdmin httputil.AuthUser
-	User         httputil.AuthUser
+	Admin        AuthUser
+	TenantAdmin  AuthUser
+	ProjectAdmin AuthUser
+	User         AuthUser
 	Client       http.Client
 }
 
@@ -35,10 +34,10 @@ func NewSingleHttpHelper() *HttpHelper {
 func NewHttpHelper() *HttpHelper {
 
 	h := &HttpHelper{
-		Admin:        httputil.AuthUser{Username: Admin, Password: AdminPassword},
-		TenantAdmin:  httputil.AuthUser{Username: TenantAdmin, Password: TenantAdminPassword},
-		ProjectAdmin: httputil.AuthUser{Username: ProjectAdmin, Password: ProjectAdminPassword},
-		User:         httputil.AuthUser{Username: User, Password: UserPassword},
+		Admin:        AuthUser{Username: Admin, Password: AdminPassword},
+		TenantAdmin:  AuthUser{Username: TenantAdmin, Password: TenantAdminPassword},
+		ProjectAdmin: AuthUser{Username: ProjectAdmin, Password: ProjectAdminPassword},
+		User:         AuthUser{Username: User, Password: UserPassword},
 	}
 
 	tr := &http.Transport{
@@ -52,7 +51,7 @@ func NewHttpHelper() *HttpHelper {
 }
 
 func (h *HttpHelper) Login(login string) *HttpHelper {
-	loginFunc := httputil.GetLoginMap(login)
+	loginFunc := GetLoginMap(login)
 	_ = loginFunc(&h.Admin)
 	_ = loginFunc(&h.TenantAdmin)
 	_ = loginFunc(&h.ProjectAdmin)
@@ -101,7 +100,7 @@ func (h *HttpHelper) RequestByUser(method, urlVal, data, user string, header map
 
 // build request
 func (h *HttpHelper) BuildRequest(method, urlVal, data, user string, header map[string]string) (*http.Request, error) {
-	req, err := httputil.BuildRequest(method, urlVal, data, header)
+	req, err := BuildRequest(method, urlVal, data, header)
 	if err != nil {
 		clog.Warn("build request error: %v", err.Error())
 		return nil, err
