@@ -37,7 +37,7 @@ workload:
   nodeHostIp: 192.168.15.219
   storageClass: localstorage-class
 image:
-  testImage: harbor.cloud.netease.com/qztest/nginxdemos-hello:plain-text-multi
+  testImage: nginxdemos/hello:plain-text
 hub:
   registry: XXX
   project: XXX
