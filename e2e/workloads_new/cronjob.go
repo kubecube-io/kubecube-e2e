@@ -70,6 +70,7 @@ func checkCronjobCreate(user string) framework.TestResp {
 			}
 		})
 	framework.ExpectNoError(err)
+	clog.Debug("cronjob status: %v", cronJob.Status)
 	return framework.SucceedResp
 }
 

@@ -266,6 +266,7 @@ func restStatefulsetReplica(user string) framework.TestResp {
 			}
 		})
 	framework.ExpectNoError(err)
+	clog.Debug("update statefulset  status: %v", sts.Status)
 	framework.ExpectEqual(sts.Status.Replicas, int32(1))
 	return framework.SucceedResp
 }
@@ -305,6 +306,7 @@ func checkStatefulsetHpa(user string) framework.TestResp {
 			}
 		})
 	framework.ExpectNoError(err)
+	clog.Debug("hpa statefulset  status: %v", sts.Status)
 	framework.ExpectEqual(sts.Status.Replicas, int32(2))
 	return framework.SucceedResp
 }

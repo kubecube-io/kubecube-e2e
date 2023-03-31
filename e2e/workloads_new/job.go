@@ -48,6 +48,7 @@ func checkJob(user string) framework.TestResp {
 		Namespace: framework.NamespaceName,
 	}, &job)
 	framework.ExpectNoError(err)
+	clog.Debug("create job status: %v", job.Status)
 	return framework.SucceedResp
 }
 

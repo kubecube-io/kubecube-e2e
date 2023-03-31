@@ -151,6 +151,7 @@ func checkDeploy(user string) framework.TestResp {
 		Namespace: framework.NamespaceName,
 	}, &deploy)
 	framework.ExpectNoError(err)
+	clog.Debug("create deployment status: %v", deploy.Status)
 	framework.ExpectEqual(deploy.Name, deployNameWithUser)
 	var i int32
 	i = 1
@@ -503,6 +504,7 @@ func resetDeployReplica(user string) framework.TestResp {
 			}
 		})
 	framework.ExpectNoError(err)
+	clog.Debug("update deployment status: %v", deploy.Status)
 	framework.ExpectEqual(deploy.Status.Replicas, int32(1))
 	return framework.SucceedResp
 }
@@ -541,6 +543,7 @@ func checkDeployHpa(user string) framework.TestResp {
 			}
 		})
 	framework.ExpectNoError(err)
+	clog.Debug("hpa deployment status: %v", deploy.Status)
 	framework.ExpectEqual(deploy.Status.Replicas, int32(2))
 	return framework.SucceedResp
 }

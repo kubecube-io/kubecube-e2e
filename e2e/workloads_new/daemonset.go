@@ -43,9 +43,9 @@ func createDs(user string) framework.TestResp {
 }
 
 func checkDs(user string) framework.TestResp {
+	ds := v1.DaemonSet{}
 	err := wait.Poll(framework.WaitInterval, framework.WaitTimeout,
 		func() (bool, error) {
-			ds := v1.DaemonSet{}
 			err := targetClient.Cache().Get(context.TODO(), types.NamespacedName{
 				Name:      daemonSetNameWithUser,
 				Namespace: framework.NamespaceName,
@@ -57,6 +57,7 @@ func checkDs(user string) framework.TestResp {
 			}
 		})
 	framework.ExpectNoError(err)
+	clog.Debug("daemonset status: %v", ds.Status)
 	return framework.SucceedResp
 }
 
@@ -67,6 +68,7 @@ func checkDsList(user string) framework.TestResp {
 		LabelSelector: labels.Set{"kubecube.io/app": daemonSetNameWithUser}.AsSelector(),
 	})
 	framework.ExpectNoError(err)
+	clog.Debug("ds list: %v", dsList.Items)
 	framework.ExpectEqual(len(dsList.Items), 1)
 	return framework.SucceedResp
 }
