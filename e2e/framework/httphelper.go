@@ -9,6 +9,8 @@ import (
 	"github.com/kubecube-io/kubecube/pkg/clog"
 )
 
+const authHeader = "X-Auth-Token"
+
 type HttpHelper struct {
 	Admin        AuthUser
 	TenantAdmin  AuthUser
@@ -108,12 +110,16 @@ func (h *HttpHelper) BuildRequest(method, urlVal, data, user string, header map[
 	switch user {
 	case Admin:
 		req.AddCookie(h.Admin.Cookie)
+		req.Header.Add(authHeader, h.Admin.Token)
 	case TenantAdmin:
 		req.AddCookie(h.TenantAdmin.Cookie)
+		req.Header.Add(authHeader, h.TenantAdmin.Token)
 	case ProjectAdmin:
 		req.AddCookie(h.ProjectAdmin.Cookie)
+		req.Header.Add(authHeader, h.ProjectAdmin.Token)
 	case User:
 		req.AddCookie(h.User.Cookie)
+		req.Header.Add(authHeader, h.User.Token)
 	}
 
 	return req, nil
