@@ -9,14 +9,13 @@ import (
 	"github.com/kubecube-io/kubecube/pkg/clog"
 )
 
-const authHeader = "X-Auth-Token"
-
 type HttpHelper struct {
 	Admin        AuthUser
 	TenantAdmin  AuthUser
 	ProjectAdmin AuthUser
 	User         AuthUser
 	Client       http.Client
+	AuthHeader   string
 }
 
 var httphelper *HttpHelper
@@ -54,10 +53,11 @@ func NewHttpHelper() *HttpHelper {
 
 func (h *HttpHelper) Login(login string) *HttpHelper {
 	loginFunc := GetLoginMap(login)
-	_ = loginFunc(&h.Admin)
-	_ = loginFunc(&h.TenantAdmin)
-	_ = loginFunc(&h.ProjectAdmin)
-	_ = loginFunc(&h.User)
+	_ = loginFunc.LoginByUser(&h.Admin)
+	_ = loginFunc.LoginByUser(&h.TenantAdmin)
+	_ = loginFunc.LoginByUser(&h.ProjectAdmin)
+	_ = loginFunc.LoginByUser(&h.User)
+	h.AuthHeader = loginFunc.AuthHeader()
 	return h
 }
 
@@ -110,16 +110,16 @@ func (h *HttpHelper) BuildRequest(method, urlVal, data, user string, header map[
 	switch user {
 	case Admin:
 		req.AddCookie(h.Admin.Cookie)
-		req.Header.Add(authHeader, h.Admin.Token)
+		req.Header.Add(h.AuthHeader, h.Admin.Token)
 	case TenantAdmin:
 		req.AddCookie(h.TenantAdmin.Cookie)
-		req.Header.Add(authHeader, h.TenantAdmin.Token)
+		req.Header.Add(h.AuthHeader, h.TenantAdmin.Token)
 	case ProjectAdmin:
 		req.AddCookie(h.ProjectAdmin.Cookie)
-		req.Header.Add(authHeader, h.ProjectAdmin.Token)
+		req.Header.Add(h.AuthHeader, h.ProjectAdmin.Token)
 	case User:
 		req.AddCookie(h.User.Cookie)
-		req.Header.Add(authHeader, h.User.Token)
+		req.Header.Add(h.AuthHeader, h.User.Token)
 	}
 
 	return req, nil

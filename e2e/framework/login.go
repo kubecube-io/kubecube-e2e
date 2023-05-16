@@ -13,7 +13,10 @@ type AuthUser struct {
 	Cookie   *http.Cookie
 }
 
-type LoginByUser func(user *AuthUser) error
+type LoginByUser interface {
+	LoginByUser(user *AuthUser) error
+	AuthHeader() string
+}
 
 var loginMap = make(map[string]LoginByUser)
 

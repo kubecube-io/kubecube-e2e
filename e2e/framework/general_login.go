@@ -9,13 +9,22 @@ import (
 	"github.com/kubecube-io/kubecube/pkg/clog"
 )
 
-var httpclient = http.DefaultClient
+var (
+	httpclient   = http.DefaultClient
+	generalLogin = &GeneralLogin{}
+)
 
-func init() {
-	Register(constants.GeneralLoginType, GeneralLogin)
+type GeneralLogin struct {
 }
 
-func GeneralLogin(user *AuthUser) error {
+func init() {
+	Register(constants.GeneralLoginType, generalLogin)
+}
+
+func (g *GeneralLogin) AuthHeader() string {
+	return constants.AuthorizationHeader
+}
+func (g *GeneralLogin) LoginByUser(user *AuthUser) error {
 	postBody := map[string]string{
 		"name":      user.Username,
 		"password":  user.Password,

@@ -1,5 +1,6 @@
 package constants
 
 const (
-	GeneralLoginType = "GeneralLogin"
+	GeneralLoginType    = "GeneralLogin"
+	AuthorizationHeader = "Authorization"
 )
