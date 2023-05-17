@@ -1,20 +1,18 @@
 # kubecube-e2e
 
-> English | [中文文档](README-zh_CN.md)
+### 总体架构
 
-### Architecture Overview
+e2e是kubecube的端到端测试工程，包括以下功能点：
 
-The e2e testing project of Kubecube includes the following features:
+- 多角色的权限测试
+- 对应集群的资源创建测试
+- 租户项目资源的测试
 
-- Multi-role permission testing
-- Resource creation testing for corresponding clusters
-- Testing of tenant project resources
-
-### Test Code Development
-For information on developing test code, please refer to the [multiuser.md](MultiUser.md) document.
+### 测试代码开发
+参考文档 [multiuser.md](MultiUser.md)
 
 
-## License
+## 开源协议
 
 ```
 Copyright 2023 KubeCube Authors
