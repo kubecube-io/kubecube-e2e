@@ -34,8 +34,10 @@ type HttpHelper struct {
 	AuthHeader   string
 }
 
-var httphelper *HttpHelper
-var once sync.Once
+var (
+	httphelper *HttpHelper
+	once       sync.Once
+)
 
 // single mode
 func NewSingleHttpHelper() *HttpHelper {
@@ -49,7 +51,6 @@ func NewSingleHttpHelper() *HttpHelper {
 }
 
 func NewHttpHelper() *HttpHelper {
-
 	h := &HttpHelper{
 		Admin:        AuthUser{Username: Admin, Password: AdminPassword},
 		TenantAdmin:  AuthUser{Username: TenantAdmin, Password: TenantAdminPassword},
@@ -108,7 +109,6 @@ func (h *HttpHelper) Request(method, urlVal, data string, header map[string]stri
 
 // request by user
 func (h *HttpHelper) RequestByUser(method, urlVal, data, user string, header map[string]string) (*http.Response, error) {
-
 	req, err := h.BuildRequest(method, urlVal, data, user, header)
 	if err != nil {
 		return nil, err

@@ -30,8 +30,7 @@ var (
 	generalLogin = &GeneralLogin{}
 )
 
-type GeneralLogin struct {
-}
+type GeneralLogin struct{}
 
 func init() {
 	Register(constants.GeneralLoginType, generalLogin)
@@ -40,6 +39,7 @@ func init() {
 func (g *GeneralLogin) AuthHeader() string {
 	return constants.AuthorizationHeader
 }
+
 func (g *GeneralLogin) LoginByUser(user *AuthUser) error {
 	postBody := map[string]string{
 		"name":      user.Username,

@@ -46,11 +46,13 @@ import (
 	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
 )
 
-var TenantId int64
-var ProjectId int64
-var scheme = runtime.NewScheme()
-var tenantHeader = make(map[string][]string)
-var projectHeader = make(map[string][]string)
+var (
+	TenantId      int64
+	ProjectId     int64
+	scheme        = runtime.NewScheme()
+	tenantHeader  = make(map[string][]string)
+	projectHeader = make(map[string][]string)
+)
 
 var isMaster bool
 
@@ -62,7 +64,7 @@ func RunE2ETests(t *testing.T) {
 
 // InitAll 初始化参数
 func InitAll() error {
-	//init client-go client
+	// init client-go client
 	clients.InitCubeClientSetWithOpts(nil)
 	// Read config and init global v
 	err := framework.InitGlobalV()
@@ -83,7 +85,6 @@ func InitAll() error {
 
 // Start 执行 e2e 测试的前置步骤
 func Start() error {
-
 	if !isMaster {
 		return waitUntilResourceInited()
 	}
@@ -101,7 +102,6 @@ func Start() error {
 
 // End 清理测试数据
 func End() error {
-
 	if !isMaster {
 		markAllTestInThisWorkerFinished()
 		return nil
@@ -119,7 +119,7 @@ func End() error {
 }
 
 func Clear() error {
-	//init client-go client
+	// init client-go client
 	clients.InitCubeClientSetWithOpts(nil)
 
 	err := loadConfigFromCm()
@@ -142,7 +142,6 @@ func Clear() error {
 	}
 
 	return clearTempResources()
-
 }
 
 func deleteUserInKubecube(ctx context.Context, cli client.Client, namespace string, username string) error {
@@ -203,7 +202,6 @@ func waitUntilResourceInited() error {
 		clog.Info("resource not ready, waiting")
 		return false, nil
 	})
-
 	if err != nil {
 		return err
 	}
@@ -306,7 +304,6 @@ func waitUntilTestsInAllWorkersFinished() {
 		clog.Info("%d workers running, waiting", len(cmList.Items))
 		return false, nil
 	})
-
 	if err != nil {
 		clog.Error("error when waitUntilTestsInAllWorkersFinished, %s", err.Error())
 	}
@@ -391,7 +388,7 @@ func loadConfigFromCm() error {
 		return err
 	}
 	path := current + "/config.yaml"
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0666)
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0o666)
 	if err != nil {
 		clog.Error("fail to output config helper due to %s \n", err.Error())
 		return err
@@ -404,7 +401,6 @@ func loadConfigFromCm() error {
 		return err
 	}
 	return nil
-
 }
 
 func clearTempResources() error {

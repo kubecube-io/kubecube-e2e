@@ -57,7 +57,7 @@ func PostFile(filename string, fieldName string, target_url string, header map[s
 	}
 	// need to know the boundary to properly close the part myself.
 	boundary := body_writer.Boundary()
-	//close_string := fmt.Sprintf("\r\n--%s--\r\n", boundary)
+	// close_string := fmt.Sprintf("\r\n--%s--\r\n", boundary)
 	close_buf := bytes.NewBufferString(fmt.Sprintf("\r\n--%s--\r\n", boundary))
 
 	// use multi-reader to defer the reading of the file data until

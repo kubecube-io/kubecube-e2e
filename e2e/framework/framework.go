@@ -77,7 +77,7 @@ var (
 	TestImage         string
 	ImagePullSecret   string
 	StorageClass      string
-	//hub
+	// hub
 	Registry string
 	Username string
 	Password string
@@ -147,7 +147,7 @@ func InitGlobalV() error {
 	CubeResourceQuota = TargetClusterName + "." + TenantName
 
 	CloudShellEnabled = viper.GetBool("cloudshell.enabled")
-	//workload
+	// workload
 	CronJobEnable = viper.GetBool("workload.cronjob")
 	DaemonSetEnable = viper.GetBool("workload.daemonSet")
 	DeploymentEnable = viper.GetBool("workload.deployment")

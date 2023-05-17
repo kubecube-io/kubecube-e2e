@@ -11,6 +11,16 @@ e2e是kubecube的端到端测试工程，包括以下功能点：
 ### 测试代码开发
 参考文档 [multiuser.md](MultiUser.md)
 
+### 适配版本
+
+| Kubecube-e2e version | Kubecube supported version | k8s supported version |
+| -------------------- | -------------------------- | --------------------- |
+| v1.0.x               | v1.8.0+                    | 1.18.0-1.26.x         |
+|                      |                            |                       |
+|                      |                            |                       |
+
+
+
 
 ## 开源协议
 

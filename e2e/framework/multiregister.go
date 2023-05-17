@@ -74,7 +74,6 @@ func CreateTestExample(test MultiUserTest) error {
 	}
 
 	return nil
-
 }
 
 func OutputMultiUserTestConfig(path string) error {
@@ -89,7 +88,7 @@ func OutputMultiUserTestConfig(path string) error {
 		return err
 	}
 
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0666)
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0o666)
 	if err != nil {
 		clog.Error("fail to output config helper due to %s \n", err.Error())
 		return err
@@ -105,9 +104,7 @@ func OutputMultiUserTestConfig(path string) error {
 }
 
 func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestResp), user string, beforeEach, afterEach func(), skipFunc func() bool) {
-
-	var _ = ginkgo.Describe(test.TestName, func() {
-
+	_ = ginkgo.Describe(test.TestName, func() {
 		testExampleConfiguredByUser, ok := ToTestMap[test.TestName]
 		if !ok {
 			clog.Info("no test named detected %s", test.TestName)
@@ -136,7 +133,6 @@ func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestR
 			if !flag && beforeEach != nil {
 				beforeEach()
 			}
-
 		})
 
 		ginkgo.AfterEach(func() {
@@ -162,7 +158,6 @@ func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestR
 			for _, s := range test.Steps {
 				step := s
 				ginkgo.It(user+" : "+step.Name, func() {
-
 					if flag {
 						clog.Info("step before failed, skipping remaining steps")
 						ginkgo.Skip("ignore")
@@ -186,7 +181,6 @@ func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestR
 					} else {
 						ExpectNoError(resp.Err)
 					}
-
 				})
 
 			}
@@ -202,6 +196,5 @@ func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestR
 				})
 			}
 		})
-
 	})
 }

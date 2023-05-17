@@ -18,8 +18,9 @@ package e2e
 
 import (
 	"context"
-	"github.com/kubecube-io/kubecube/pkg/utils/constants"
 	"strconv"
+
+	"github.com/kubecube-io/kubecube/pkg/utils/constants"
 
 	quotav1 "github.com/kubecube-io/kubecube/pkg/apis/quota/v1"
 	v1 "github.com/kubecube-io/kubecube/pkg/apis/quota/v1"
@@ -38,7 +39,6 @@ import (
 
 // initializeResources 执行 e2e 测试的前置资源创建
 func initializeResources() error {
-
 	clog.Info("Before Testing...")
 	ctx := context.Background()
 	// 1.创建租户: cube-e2e-tenant-1
@@ -182,7 +182,8 @@ func initializeResources() error {
 			Target: v1.TargetObj{
 				Name: framework.TenantName,
 				Kind: "Tenant",
-			}},
+			},
+		},
 	}
 	err = framework.PivotClusterClient.Direct().Create(ctx, &tenantQuota)
 	if err != nil && !errors.IsAlreadyExists(err) {
@@ -289,7 +290,6 @@ func initializeResources() error {
 
 // clearResources 清理测试数据
 func clearResources() error {
-
 	ctx := context.Background()
 	waitInterval := framework.WaitInterval
 	waitTimeout := framework.WaitTimeout
@@ -330,7 +330,7 @@ func clearResources() error {
 		}
 	}
 
-	//2.删除用户
+	// 2.删除用户
 	clog.Info("[After] delete user")
 	err = deleteUserInKubecube(ctx, pivotCli.Direct(), tenantNamespace, framework.TenantAdmin)
 	if err != nil {
@@ -345,7 +345,7 @@ func clearResources() error {
 		return err
 	}
 
-	//3.删除项目
+	// 3.删除项目
 	clog.Info("[After] delete project %v", framework.ProjectName)
 	pns := v1alpha2.SubnamespaceAnchor{}
 	pns.Namespace = tenantNamespace
@@ -381,7 +381,7 @@ func clearResources() error {
 		return err
 	}
 
-	//4.删除租户配额
+	// 4.删除租户配额
 	clog.Info("[After] delete tenant resource quota")
 	cubeQuota := quotav1.CubeResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{
@@ -396,7 +396,7 @@ func clearResources() error {
 		}
 	}
 
-	//5.删除租户
+	// 5.删除租户
 	clog.Info("[After] delete tenant %v", framework.TenantName)
 	tns := corev1.Namespace{}
 	tns.Name = tenantNamespace
@@ -431,7 +431,7 @@ func clearResources() error {
 		return err
 	}
 
-	//6. 删除 namespace resource quota
+	// 6. 删除 namespace resource quota
 	clog.Info("[After] delete namespace resource quota %v", framework.TargetClusterName+"."+framework.TenantName+"."+framework.ProjectName+"."+framework.NamespaceName)
 	nsQuota := corev1.ResourceQuota{
 		ObjectMeta: metav1.ObjectMeta{
