@@ -2,7 +2,7 @@
 
 kubecube e2e 多租户权限测试框架使用
 
-可参考 e2e/config/configmap_new/configmap_check.go
+可参考 e2e/config/configmap/configmap_check.go
 
 ## 编写测试方法
 

@@ -13,11 +13,12 @@ e2e是kubecube的端到端测试工程，包括以下功能点：
 
 ### 适配版本
 
-| Kubecube-e2e version | Kubecube supported version | k8s supported version |
-| -------------------- | -------------------------- | --------------------- |
-| v1.0.x               | v1.8.0+                    | 1.18.0-1.26.x         |
-|                      |                            |                       |
-|                      |                            |                       |
+| Kubecube-e2e version | Kubecube supported version                                   | k8s supported version |
+| -------------------- | ------------------------------------------------------------ | --------------------- |
+| v1.0.x               | v1.0.0-1.7.x，仅支持使用admin测试，参数：-runAs=admin<br />v1.8.x，支持多角色测试，参数：-runAs=admin,projectAdmin,tenantAdmin,user | 1.18.0-1.26.x         |
+|                      |                                                              |                       |
+|                      |                                                              |                       |
+|                      |                                                              |                       |
 
 
 

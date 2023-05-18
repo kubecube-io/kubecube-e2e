@@ -21,7 +21,7 @@
 
 ### Supported Versions
 
-Kubecube: v1.8.x
+Kubecube: v1.0+
 
 k8s: v1.18+
 
