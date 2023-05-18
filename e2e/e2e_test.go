@@ -27,25 +27,27 @@ import (
 	"github.com/kubecube-io/kubecube/pkg/clog"
 
 	// test sources
-	_ "github.com/kubecube-io/kubecube-e2e/e2e/cloudshell_new"
+	_ "github.com/kubecube-io/kubecube-e2e/e2e/cloudshell"
 	_ "github.com/kubecube-io/kubecube-e2e/e2e/cluster"
-	_ "github.com/kubecube-io/kubecube-e2e/e2e/config/configmap_new"
-	_ "github.com/kubecube-io/kubecube-e2e/e2e/config/secret_new"
-	_ "github.com/kubecube-io/kubecube-e2e/e2e/crd_new"
-	_ "github.com/kubecube-io/kubecube-e2e/e2e/ingress_new"
+	_ "github.com/kubecube-io/kubecube-e2e/e2e/config/configmap"
+	_ "github.com/kubecube-io/kubecube-e2e/e2e/config/secret"
+	_ "github.com/kubecube-io/kubecube-e2e/e2e/crd"
+	_ "github.com/kubecube-io/kubecube-e2e/e2e/ingress"
 	_ "github.com/kubecube-io/kubecube-e2e/e2e/node"
-	_ "github.com/kubecube-io/kubecube-e2e/e2e/service_new"
-	_ "github.com/kubecube-io/kubecube-e2e/e2e/storageclass_new"
-	_ "github.com/kubecube-io/kubecube-e2e/e2e/tenantquota_new"
-	_ "github.com/kubecube-io/kubecube-e2e/e2e/workloads_new"
+	_ "github.com/kubecube-io/kubecube-e2e/e2e/service"
+	_ "github.com/kubecube-io/kubecube-e2e/e2e/storageclass"
+	_ "github.com/kubecube-io/kubecube-e2e/e2e/tenantquota"
+	_ "github.com/kubecube-io/kubecube-e2e/e2e/workloads"
 
 	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
 )
 
-var output = flag.String("MCOutput", "", "multi config output config")
-var runUsingDefault = flag.Bool("runDefault", false, "run using default output config")
-var master = flag.Bool("master", false, "whether to init and clear resource")
-var runningUser = flag.String("runAs", "admin", "run using default output config")
+var (
+	output          = flag.String("MCOutput", "", "multi config output config")
+	runUsingDefault = flag.Bool("runDefault", false, "run using default output config")
+	master          = flag.Bool("master", false, "whether to init and clear resource")
+	runningUser     = flag.String("runAs", "admin", "run using default output config")
+)
 
 // entrance
 func TestMain(m *testing.M) {

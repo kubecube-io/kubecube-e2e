@@ -27,12 +27,10 @@ type TestResp struct {
 
 type TestFunc func(user string) TestResp
 
-var (
-	SucceedResp = TestResp{
-		Err:  nil,
-		Data: "",
-	}
-)
+var SucceedResp = TestResp{
+	Err:  nil,
+	Data: "",
+}
 
 func NewTestResp(err error, data interface{}) TestResp {
 	return TestResp{

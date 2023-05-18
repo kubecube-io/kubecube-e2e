@@ -13,6 +13,14 @@ The e2e testing project of Kubecube includes the following features:
 ### Test Code Development
 For information on developing test code, please refer to the [multiuser.md](MultiUser.md) document.
 
+### 适配版本
+
+| Kubecube-e2e version | Kubecube supported version                                   | k8s supported version |
+| -------------------- | ------------------------------------------------------------ | --------------------- |
+| v1.0.x               | v1.0.0-1.7.x only supports testing with the admin account, parameter: -runAs=admin <br /> v1.8.x supports testing with multiple roles, parameter: -runAs=admin,projectAdmin,tenantAdmin,user | 1.18.0-1.26.x         |
+|                      |                                                              |                       |
+|                      |                                                              |                       |
+
 
 ## License
 
