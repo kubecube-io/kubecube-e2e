@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/kubecube-io/kubecube/pkg/clog"
-	v12 "k8s.io/api/apps/v1"
-	v13 "k8s.io/api/core/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -44,7 +44,7 @@ func createDeployAndSvc2(user string) framework.TestResp {
 	ingress2NameWithUser = framework.NameWithUser(ingress2Name, user)
 	err := wait.Poll(waitInterval, waitTimeout,
 		func() (bool, error) {
-			var namespace v13.Namespace
+			var namespace corev1.Namespace
 			errInfo := cli.Get(ctx, types.NamespacedName{Name: framework.NamespaceName}, &namespace)
 			if errInfo == nil {
 				return true, nil
@@ -56,38 +56,38 @@ func createDeployAndSvc2(user string) framework.TestResp {
 
 	cpu := resource.MustParse("100m")
 	memory := resource.MustParse("100Mi")
-	deploy1 = &v12.Deployment{
+	deploy1 = &appsv1.Deployment{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      deploy1NameWithUser,
 			Namespace: framework.NamespaceName,
 		},
-		Spec: v12.DeploymentSpec{
+		Spec: appsv1.DeploymentSpec{
 			Selector: &v1.LabelSelector{
 				MatchLabels: map[string]string{"kubecube.io/app": deploy1NameWithUser},
 			},
 			Replicas: &replicas,
-			Template: v13.PodTemplateSpec{
+			Template: corev1.PodTemplateSpec{
 				ObjectMeta: v1.ObjectMeta{
 					Labels: map[string]string{"kubecube.io/app": deploy1NameWithUser},
 				},
-				Spec: v13.PodSpec{
-					Containers: []v13.Container{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
 						{
 							Name:  "nginx",
 							Image: framework.TestImage,
-							Resources: v13.ResourceRequirements{
-								Requests: v13.ResourceList{
-									v13.ResourceCPU:    cpu,
-									v13.ResourceMemory: memory,
+							Resources: corev1.ResourceRequirements{
+								Requests: corev1.ResourceList{
+									corev1.ResourceCPU:    cpu,
+									corev1.ResourceMemory: memory,
 								},
-								Limits: v13.ResourceList{
-									v13.ResourceCPU:    cpu,
-									v13.ResourceMemory: memory,
+								Limits: corev1.ResourceList{
+									corev1.ResourceCPU:    cpu,
+									corev1.ResourceMemory: memory,
 								},
 							},
 						},
 					},
-					ImagePullSecrets: []v13.LocalObjectReference{{Name: framework.ImagePullSecret}},
+					ImagePullSecrets: []corev1.LocalObjectReference{{Name: framework.ImagePullSecret}},
 				},
 			},
 		},
@@ -95,14 +95,14 @@ func createDeployAndSvc2(user string) framework.TestResp {
 	err = cli.Create(ctx, deploy1)
 	framework.ExpectNoError(err)
 
-	svc1 = &v13.Service{
+	svc1 = &corev1.Service{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      svc1NameWithUser,
 			Namespace: framework.NamespaceName,
 		},
-		Spec: v13.ServiceSpec{
+		Spec: corev1.ServiceSpec{
 			Selector: map[string]string{"kubecube.io/app": deploy1NameWithUser},
-			Ports: []v13.ServicePort{
+			Ports: []corev1.ServicePort{
 				{
 					Name:       "demo-port",
 					Port:       80,
@@ -140,7 +140,7 @@ func createIngress2(user string) framework.TestResp {
 	ingress2 = &v1beta1.Ingress{}
 	err = wait.Poll(waitInterval, waitTimeout,
 		func() (bool, error) {
-			err = cli.Get(ctx, types.NamespacedName{Name: ingress2NameWithUser, Namespace: framework.NamespaceName}, ingress2)
+			err = framework.PivotConvertClient.Get(ctx, types.NamespacedName{Name: ingress2NameWithUser, Namespace: framework.NamespaceName}, ingress2)
 			framework.ExpectNoError(err)
 			if ingress2.Name == ingress2NameWithUser {
 				return true, nil
@@ -189,7 +189,7 @@ func updateIngress2(user string) framework.TestResp {
 	url := "/api/v1/cube/proxy/clusters/" + framework.PivotClusterName + "/apis/networking.k8s.io/v1/namespaces/" + framework.NamespaceName + "/ingresses/" + ingress2NameWithUser
 	err := wait.Poll(waitInterval, waitTimeout,
 		func() (bool, error) {
-			err := cli.Get(ctx, types.NamespacedName{Name: ingress2NameWithUser, Namespace: framework.NamespaceName}, ingress2)
+			err := framework.TargetConvertClient.Get(ctx, types.NamespacedName{Name: ingress2NameWithUser, Namespace: framework.NamespaceName}, ingress2)
 			framework.ExpectNoError(err)
 			if ingress2.Name == ingress2NameWithUser {
 				return true, nil
@@ -215,7 +215,7 @@ func updateIngress2(user string) framework.TestResp {
 	framework.ExpectEqual(resp.StatusCode, http.StatusOK)
 	err = wait.Poll(waitInterval, waitTimeout,
 		func() (bool, error) {
-			err = cli.Get(ctx, types.NamespacedName{Name: ingress2NameWithUser, Namespace: framework.NamespaceName}, ingress2)
+			err = framework.PivotConvertClient.Get(ctx, types.NamespacedName{Name: ingress2NameWithUser, Namespace: framework.NamespaceName}, ingress2)
 			framework.ExpectNoError(err)
 			if ingress2.Annotations["nginx.ingress.kubernetes.io/affinity"] == "cookie" {
 				return true, nil
@@ -253,7 +253,7 @@ func accessIngress2(user string) framework.TestResp {
 }
 
 func deleteIngress2(user string) framework.TestResp {
-	framework.ExpectNoError(cli.Delete(ctx, ingress2))
+	framework.ExpectNoError(framework.PivotConvertClient.Delete(ctx, ingress2))
 	return framework.SucceedResp
 }
 

@@ -23,8 +23,8 @@ import (
 	"net/http"
 
 	"github.com/kubecube-io/kubecube/pkg/clog"
-	v12 "k8s.io/api/apps/v1"
-	v13 "k8s.io/api/core/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -38,28 +38,28 @@ func createDeployAndSvcAndIngress(user string) framework.TestResp {
 	svc1NameWithUser = framework.NameWithUser(svc1Name, user)
 	ingress1NameWithUser = framework.NameWithUser(ingress1Name, user)
 	replicas := int32(1)
-	deploy1 = &v12.Deployment{
+	deploy1 = &appsv1.Deployment{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      deploy1NameWithUser,
 			Namespace: framework.NamespaceName,
 		},
-		Spec: v12.DeploymentSpec{
+		Spec: appsv1.DeploymentSpec{
 			Selector: &v1.LabelSelector{
 				MatchLabels: map[string]string{"kubecube.io/app": deploy1NameWithUser},
 			},
 			Replicas: &replicas,
-			Template: v13.PodTemplateSpec{
+			Template: corev1.PodTemplateSpec{
 				ObjectMeta: v1.ObjectMeta{
 					Labels: map[string]string{"kubecube.io/app": deploy1NameWithUser},
 				},
-				Spec: v13.PodSpec{
-					Containers: []v13.Container{
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
 						{
 							Name:  "nginx",
 							Image: framework.TestImage,
 						},
 					},
-					ImagePullSecrets: []v13.LocalObjectReference{{Name: framework.ImagePullSecret}},
+					ImagePullSecrets: []corev1.LocalObjectReference{{Name: framework.ImagePullSecret}},
 				},
 			},
 		},
@@ -67,14 +67,14 @@ func createDeployAndSvcAndIngress(user string) framework.TestResp {
 	err := framework.TargetClusterClient.Direct().Create(ctx, deploy1)
 	framework.ExpectNoError(err)
 
-	svc1 = &v13.Service{
+	svc1 = &corev1.Service{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      svc1NameWithUser,
 			Namespace: framework.NamespaceName,
 		},
-		Spec: v13.ServiceSpec{
+		Spec: corev1.ServiceSpec{
 			Selector: map[string]string{"kubecube.io/app": deploy1NameWithUser},
-			Ports: []v13.ServicePort{
+			Ports: []corev1.ServicePort{
 				{Name: "port1", Protocol: "TCP", Port: 80, TargetPort: intstr.FromInt(80)},
 			},
 		},
@@ -104,7 +104,7 @@ func createDeployAndSvcAndIngress(user string) framework.TestResp {
 			},
 		},
 	}
-	err = framework.TargetClusterClient.Direct().Create(ctx, ingress1)
+	err = framework.TargetConvertClient.Create(ctx, ingress1)
 	framework.ExpectNoError(err)
 	return framework.SucceedResp
 }
@@ -114,7 +114,7 @@ func deleteDeployAndSvcAndIngress(user string) framework.TestResp {
 	framework.ExpectNoError(err)
 	err = framework.TargetClusterClient.Direct().Delete(ctx, svc1)
 	framework.ExpectNoError(err)
-	err = framework.TargetClusterClient.Direct().Delete(ctx, ingress1)
+	err = framework.TargetConvertClient.Delete(ctx, ingress1)
 	framework.ExpectNoError(err)
 	return framework.SucceedResp
 }
@@ -133,7 +133,7 @@ func checkEvents(user string) framework.TestResp {
 
 	framework.ExpectEqual(resp.StatusCode, http.StatusOK)
 
-	var eventList v13.EventList
+	var eventList corev1.EventList
 	err = json.Unmarshal(body, &eventList)
 	framework.ExpectNoError(err)
 	return framework.SucceedResp
