@@ -64,8 +64,6 @@ func RunE2ETests(t *testing.T) {
 
 // InitAll 初始化参数
 func InitAll() error {
-	// init client-go client
-	clients.InitCubeClientSetWithOpts(nil)
 	// Read config and init global v
 	err := framework.InitGlobalV()
 	if err != nil {
