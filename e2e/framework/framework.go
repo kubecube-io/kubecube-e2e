@@ -205,7 +205,7 @@ func InitGlobalV() error {
 		return fmt.Errorf("get tatget client failed: %v", err)
 	}
 	TargetClusterClient = cli2
-	convertor, err = conversion.NewVersionConvertor(TargetClusterClient.CacheDiscovery(), TargetConvertClient.RESTMapper())
+	convertor, err = conversion.NewVersionConvertor(TargetClusterClient.CacheDiscovery(), TargetClusterClient.RESTMapper())
 	if err != nil {
 		clog.Error("init client convert error, error: %s", err.Error())
 		return nil
