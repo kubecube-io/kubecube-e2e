@@ -3,7 +3,7 @@
 2023-05-26
 
 ## Bugfix
-- Fix ingress function[#5](https://github.com/kubecube-io/kubecube-e2e/pull/5)
+- Fix ingress function[#7](https://github.com/kubecube-io/kubecube-e2e/pull/7)
 
 ## Dependencies
 
