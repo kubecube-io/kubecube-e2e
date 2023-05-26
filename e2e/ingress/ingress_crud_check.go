@@ -24,8 +24,8 @@ import (
 	"net/http"
 
 	"github.com/kubecube-io/kubecube/pkg/clog"
-	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
+	v12 "k8s.io/api/apps/v1"
+	v13 "k8s.io/api/core/v1"
 	"k8s.io/api/extensions/v1beta1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,28 +41,28 @@ func createDeployAndSvc1(user string) framework.TestResp {
 	svc1NameWithUser = framework.NameWithUser(svc1Name, user)
 	ingress1NameWithUser = framework.NameWithUser(ingress1Name, user)
 	replicas := int32(1)
-	deploy1 = &appsv1.Deployment{
+	deploy1 = &v12.Deployment{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      deploy1NameWithUser,
 			Namespace: framework.NamespaceName,
 		},
-		Spec: appsv1.DeploymentSpec{
+		Spec: v12.DeploymentSpec{
 			Replicas: &replicas,
 			Selector: &v1.LabelSelector{
 				MatchLabels: map[string]string{"kubecube.io/app": deploy1NameWithUser},
 			},
-			Template: corev1.PodTemplateSpec{
+			Template: v13.PodTemplateSpec{
 				ObjectMeta: v1.ObjectMeta{
 					Labels: map[string]string{"kubecube.io/app": deploy1NameWithUser},
 				},
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
+				Spec: v13.PodSpec{
+					Containers: []v13.Container{
 						{
 							Name:  "nginx",
 							Image: framework.TestImage,
 						},
 					},
-					ImagePullSecrets: []corev1.LocalObjectReference{{Name: framework.ImagePullSecret}},
+					ImagePullSecrets: []v13.LocalObjectReference{{Name: framework.ImagePullSecret}},
 				},
 			},
 		},
@@ -70,14 +70,14 @@ func createDeployAndSvc1(user string) framework.TestResp {
 	err := framework.TargetClusterClient.Direct().Create(ctx, deploy1)
 	framework.ExpectNoError(err)
 
-	svc1 = &corev1.Service{
+	svc1 = &v13.Service{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      svc1NameWithUser,
 			Namespace: framework.NamespaceName,
 		},
-		Spec: corev1.ServiceSpec{
+		Spec: v13.ServiceSpec{
 			Selector: map[string]string{"kubecube.io/app": deploy1NameWithUser},
-			Ports: []corev1.ServicePort{
+			Ports: []v13.ServicePort{
 				{
 					Name:       "demo-port",
 					Port:       8080,
@@ -198,7 +198,7 @@ func deleteIngress(user string) framework.TestResp {
 	// check return success
 	framework.ExpectEqual(resp.StatusCode, http.StatusOK)
 	ingress := v1beta1.Ingress{}
-	err = framework.TargetConvertClient.Get(ctx, types.NamespacedName{Name: ingress1NameWithUser, Namespace: framework.NamespaceName}, &ingress)
+	err = framework.TargetClusterClient.Direct().Get(ctx, types.NamespacedName{Name: ingress1NameWithUser, Namespace: framework.NamespaceName}, &ingress)
 	framework.ExpectEqual(true, kerrors.IsNotFound(err))
 	return framework.SucceedResp
 }

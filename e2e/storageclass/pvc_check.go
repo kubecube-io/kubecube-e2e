@@ -71,7 +71,7 @@ func createPVC1(user string) framework.TestResp {
 	defer respOfCreatePVC.Body.Close()
 	body, err := io.ReadAll(respOfCreatePVC.Body)
 	framework.ExpectNoError(err)
-	clog.Info("get pvc1: %+v", string(body))
+	clog.Debug("get pvc1: %+v", string(body))
 
 	if !framework.IsSuccess(respOfCreatePVC.StatusCode) {
 		clog.Warn("res code %d", respOfCreatePVC.StatusCode)
@@ -97,7 +97,7 @@ func createPVC2(user string) framework.TestResp {
 	defer respOfCreatePVC.Body.Close()
 	body, err := io.ReadAll(respOfCreatePVC.Body)
 	framework.ExpectNoError(err)
-	clog.Info("get pvc2: %+v", string(body))
+	clog.Debug("get pvc2: %+v", string(body))
 
 	if !framework.IsSuccess(respOfCreatePVC.StatusCode) {
 		clog.Warn("res code %d", respOfCreatePVC.StatusCode)
@@ -123,7 +123,7 @@ func createPod(user string) framework.TestResp {
 	defer respOfCreatePod.Body.Close()
 	body, err := io.ReadAll(respOfCreatePod.Body)
 	framework.ExpectNoError(err)
-	clog.Info("get pod task-pv-pod: %+v", string(body))
+	clog.Debug("get pod task-pv-pod: %+v", string(body))
 
 	if !framework.IsSuccess(respOfCreatePod.StatusCode) {
 		clog.Warn("res code %d", respOfCreatePod.StatusCode)
@@ -166,7 +166,7 @@ func deletePod(user string) framework.TestResp {
 	defer respOfDeletePod.Body.Close()
 	body, err := io.ReadAll(respOfDeletePod.Body)
 	framework.ExpectNoError(err)
-	clog.Info("delete pod: %+v", string(body))
+	clog.Debug("delete pod: %+v", string(body))
 
 	if !framework.IsSuccess(respOfDeletePod.StatusCode) {
 		clog.Warn("res code %d", respOfDeletePod.StatusCode)
@@ -190,7 +190,7 @@ func deletePvc(user string) framework.TestResp {
 	respOfDeletePVC, err := httpHelper.RequestByUser(http.MethodDelete, urlOfDeletePVC, "", user, nil)
 	defer respOfDeletePVC.Body.Close()
 	body, err := io.ReadAll(respOfDeletePVC.Body)
-	clog.Info("delete pvc1: %+v", string(body))
+	clog.Debug("delete pvc1: %+v", string(body))
 
 	if !framework.IsSuccess(respOfDeletePVC.StatusCode) {
 		clog.Warn("res code %d", respOfDeletePVC.StatusCode)
@@ -203,7 +203,7 @@ func deletePvc(user string) framework.TestResp {
 	defer respOfDeletePVC.Body.Close()
 	body, err = io.ReadAll(respOfDeletePVC.Body)
 	framework.ExpectNoError(err)
-	clog.Info("delete pvc2: %+v", string(body))
+	clog.Debug("delete pvc2: %+v", string(body))
 
 	if !framework.IsSuccess(respOfDeletePVC.StatusCode) {
 		clog.Warn("res code %d", respOfDeletePVC.StatusCode)
@@ -232,11 +232,11 @@ func deletePvc(user string) framework.TestResp {
 func deletePv(user string) framework.TestResp {
 	urlOfDeletePV := "%s/api/v1/cube/proxy/clusters/%s/api/v1/namespaces/%s/persistentvolume/%s"
 	urlOfDeletePV = fmt.Sprintf(urlOfDeletePV, framework.KubecubeHost, clusterName, namespace, PV)
-	clog.Info("delete pv %s", PV)
+	clog.Debug("delete pv %s", PV)
 	respOfDeletePV, err := httpHelper.RequestByUser(http.MethodDelete, urlOfDeletePV, "", user, nil)
 	defer respOfDeletePV.Body.Close()
 	body, err := io.ReadAll(respOfDeletePV.Body)
-	clog.Info("delete pv %s", string(body))
+	clog.Debug("delete pv %s", string(body))
 	framework.ExpectNoError(err)
 
 	time.Sleep(time.Second * 10)

@@ -20,20 +20,20 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/kubecube-io/kubecube/pkg/conversion"
 	"os"
 	"time"
 
 	e2econstants "github.com/kubecube-io/kubecube-e2e/util/constants"
+	v1 "github.com/kubecube-io/kubecube/pkg/apis/cluster/v1"
+	"github.com/kubecube-io/kubecube/pkg/clients"
 	"github.com/kubecube-io/kubecube/pkg/clog"
 	"github.com/kubecube-io/kubecube/pkg/multicluster"
 	"github.com/kubecube-io/kubecube/pkg/multicluster/client"
+	"github.com/kubecube-io/kubecube/pkg/utils/constants"
 	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	controllerruntime "sigs.k8s.io/controller-runtime"
-	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var (
@@ -84,11 +84,9 @@ var (
 	Email    string
 	// PivotClusterClient communicate with pivot cluster
 	PivotClusterClient client.Client
-	PivotConvertClient ctrlclient.Client
 
 	// TargetClusterClient communicate with target cluster
 	TargetClusterClient client.Client
-	TargetConvertClient ctrlclient.Client
 
 	KubeCubeSystem string
 	KubeCubeE2ECM  string
@@ -178,39 +176,37 @@ func InitGlobalV() error {
 		LoginType = e2econstants.GeneralLoginType
 	}
 
-	cfg := controllerruntime.GetConfigOrDie()
-	mgr, err := multicluster.NewSyncMgrWithDefaultSetting(cfg, false)
-	if err != nil {
-		return err
-	}
-	err = mgr.Start(context.Background())
-	if err != nil {
-		return err
+	localCli := clients.Interface().Kubernetes(constants.LocalCluster)
+	if localCli == nil {
+		return fmt.Errorf("get local client %v failed", constants.LocalCluster)
 	}
 
-	cli, err := multicluster.Interface().GetClient(PivotClusterName)
+	clusters := v1.ClusterList{}
+
+	err = localCli.Direct().List(context.Background(), &clusters)
 	if err != nil {
-		return fmt.Errorf("get pivot client failed: %v", err)
+		return fmt.Errorf("list clusters failed %v", err)
+	}
+
+	for _, v := range clusters.Items {
+		err = multicluster.AddInternalCluster(v)
+		if err != nil {
+			return fmt.Errorf("add cluster %v failed", v.Name)
+		}
+	}
+
+	cli := clients.Interface().Kubernetes(PivotClusterName)
+	if cli == nil {
+		return fmt.Errorf("get pivot client %v failed", PivotClusterName)
 	}
 	PivotClusterClient = cli
-	convertor, err := conversion.NewVersionConvertor(PivotClusterClient.CacheDiscovery(), PivotClusterClient.RESTMapper())
-	if err != nil {
-		clog.Error("init client convert error, error: %s", err.Error())
-		return nil
-	}
-	PivotConvertClient = conversion.WrapClient(PivotClusterClient.Direct(), convertor, true)
 
-	cli2, err := multicluster.Interface().GetClient(TargetClusterName)
+	cli2 := clients.Interface().Kubernetes(TargetClusterName)
 	if cli2 == nil {
-		return fmt.Errorf("get tatget client failed: %v", err)
+		return fmt.Errorf("get tatget client %v failed", TargetClusterClient)
 	}
 	TargetClusterClient = cli2
-	convertor, err = conversion.NewVersionConvertor(TargetClusterClient.CacheDiscovery(), TargetClusterClient.RESTMapper())
-	if err != nil {
-		clog.Error("init client convert error, error: %s", err.Error())
-		return nil
-	}
-	TargetConvertClient = conversion.WrapClient(TargetClusterClient.Direct(), convertor, true)
+
 	return nil
 }
 

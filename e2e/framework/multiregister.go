@@ -150,7 +150,7 @@ func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestR
 					if len(step.Description) > 0 {
 						ginkgo.By(step.Description)
 					}
-					clog.Info("running init step as %s \n", getUser)
+					clog.Debug("running init step as %s \n", getUser)
 					step.StepFunc(getUser)
 				})
 			}
@@ -169,7 +169,7 @@ func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestR
 
 					testFunc := step.StepFunc
 
-					clog.Info("running %s step %s as %s", test.TestName, step.Name, getUser)
+					clog.Debug("running %s step %s as %s", test.TestName, step.Name, getUser)
 					resp := testFunc(getUser)
 					if !userTestFromConfig.ContinueIfError && resp.Err != nil {
 						flag = true
@@ -191,7 +191,7 @@ func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestR
 					if len(step.Description) > 0 {
 						ginkgo.By(step.Description)
 					}
-					clog.Info("running final step as %s \n", getUser)
+					clog.Debug("running final step as %s \n", getUser)
 					step.StepFunc(getUser)
 				})
 			}

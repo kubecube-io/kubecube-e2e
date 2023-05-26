@@ -46,7 +46,7 @@ func createJob(user string) framework.TestResp {
 	defer jobResp.Body.Close()
 	body, err := io.ReadAll(jobResp.Body)
 	framework.ExpectNoError(err)
-	clog.Info("create job %v, %v", jobNameWithUser, string(body))
+	clog.Debug("create job %v, %v", jobNameWithUser, string(body))
 
 	if !framework.IsSuccess(jobResp.StatusCode) {
 		clog.Warn("res code %d", jobResp.StatusCode)
@@ -64,7 +64,7 @@ func checkJob(user string) framework.TestResp {
 		Namespace: framework.NamespaceName,
 	}, &job)
 	framework.ExpectNoError(err)
-	clog.Info("create job status: %v", job.Status)
+	clog.Debug("create job status: %v", job.Status)
 	return framework.SucceedResp
 }
 

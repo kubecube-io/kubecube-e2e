@@ -80,7 +80,7 @@ func listNode(user string) framework.TestResp {
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	framework.ExpectNoError(err)
-	clog.Info("get node list resp, data: %s", string(body))
+	clog.Debug("get node list resp, data: %s", string(body))
 	var nodeResMap map[string]interface{}
 	err = json.Unmarshal(body, &nodeResMap)
 	framework.ExpectNoError(err)
