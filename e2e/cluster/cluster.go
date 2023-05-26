@@ -77,7 +77,7 @@ func listCluster(user string) framework.TestResp {
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	framework.ExpectNoError(err)
-	clog.Debug("get cluster list resp, data: %s", string(body))
+	clog.Info("get cluster list resp, data: %s", string(body))
 	var clusterResMap map[string]interface{}
 	err = json.Unmarshal(body, &clusterResMap)
 	framework.ExpectNoError(err)

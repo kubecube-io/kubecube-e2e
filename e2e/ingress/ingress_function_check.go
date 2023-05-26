@@ -42,17 +42,6 @@ func createDeployAndSvc2(user string) framework.TestResp {
 	deploy1NameWithUser = framework.NameWithUser(deploy1Name, user)
 	svc1NameWithUser = framework.NameWithUser(svc1Name, user)
 	ingress2NameWithUser = framework.NameWithUser(ingress2Name, user)
-	err := wait.Poll(waitInterval, waitTimeout,
-		func() (bool, error) {
-			var namespace corev1.Namespace
-			errInfo := cli.Get(ctx, types.NamespacedName{Name: framework.NamespaceName}, &namespace)
-			if errInfo == nil {
-				return true, nil
-			} else {
-				return false, nil
-			}
-		})
-	framework.ExpectNoError(err)
 
 	cpu := resource.MustParse("100m")
 	memory := resource.MustParse("100Mi")
@@ -92,7 +81,7 @@ func createDeployAndSvc2(user string) framework.TestResp {
 			},
 		},
 	}
-	err = cli.Create(ctx, deploy1)
+	err := framework.TargetClusterClient.Direct().Create(ctx, deploy1)
 	framework.ExpectNoError(err)
 
 	svc1 = &corev1.Service{
@@ -111,20 +100,20 @@ func createDeployAndSvc2(user string) framework.TestResp {
 			},
 		},
 	}
-	err = cli.Create(ctx, svc1)
+	err = framework.TargetClusterClient.Direct().Create(ctx, svc1)
 	framework.ExpectNoError(err)
 	return framework.SucceedResp
 }
 
 func deleteDeployAndSvc2(user string) framework.TestResp {
-	framework.ExpectNoError(cli.Delete(ctx, deploy1))
-	framework.ExpectNoError(cli.Delete(ctx, svc1))
+	framework.ExpectNoError(framework.TargetClusterClient.Direct().Delete(ctx, deploy1))
+	framework.ExpectNoError(framework.TargetClusterClient.Direct().Delete(ctx, svc1))
 
 	return framework.SucceedResp
 }
 
 func createIngress2(user string) framework.TestResp {
-	url := "/api/v1/cube/proxy/clusters/" + framework.PivotClusterName + "/apis/networking.k8s.io/v1/namespaces/" + framework.NamespaceName + "/ingresses"
+	url := "/api/v1/cube/proxy/clusters/" + framework.TargetClusterName + "/apis/networking.k8s.io/v1/namespaces/" + framework.NamespaceName + "/ingresses"
 	postJson := fmt.Sprintf("{\"apiVersion\":\"networking.k8s.io/v1\",\"kind\":\"Ingress\",\"metadata\":{\"name\":\"%s\",\"annotations\":{\"nginx.ingress.kubernetes.io/load-balance\":\"round_robin\"},\"labels\":{}},\"spec\":{\"rules\":[{\"host\":\"%s\",\"http\":{\"paths\":[{\"pathType\":\"ImplementationSpecific\",\"path\":\"/%s\",\"backend\":{\"service\":{\"name\":\"%s\",\"port\":{\"number\":80}}}}]}}],\"tls\":[]}}",
 		ingress2NameWithUser, ingressAddr, user, svc1NameWithUser)
 	resp, err := httpHelper.RequestByUser(http.MethodPost, framework.KubecubeHost+url, postJson, user, nil)
@@ -140,7 +129,7 @@ func createIngress2(user string) framework.TestResp {
 	ingress2 = &v1beta1.Ingress{}
 	err = wait.Poll(waitInterval, waitTimeout,
 		func() (bool, error) {
-			err = framework.PivotConvertClient.Get(ctx, types.NamespacedName{Name: ingress2NameWithUser, Namespace: framework.NamespaceName}, ingress2)
+			err = framework.TargetConvertClient.Get(ctx, types.NamespacedName{Name: ingress2NameWithUser, Namespace: framework.NamespaceName}, ingress2)
 			framework.ExpectNoError(err)
 			if ingress2.Name == ingress2NameWithUser {
 				return true, nil
@@ -186,7 +175,7 @@ func accessIngress(user string) framework.TestResp {
 }
 
 func updateIngress2(user string) framework.TestResp {
-	url := "/api/v1/cube/proxy/clusters/" + framework.PivotClusterName + "/apis/networking.k8s.io/v1/namespaces/" + framework.NamespaceName + "/ingresses/" + ingress2NameWithUser
+	url := "/api/v1/cube/proxy/clusters/" + framework.TargetClusterName + "/apis/networking.k8s.io/v1/namespaces/" + framework.NamespaceName + "/ingresses/" + ingress2NameWithUser
 	err := wait.Poll(waitInterval, waitTimeout,
 		func() (bool, error) {
 			err := framework.TargetConvertClient.Get(ctx, types.NamespacedName{Name: ingress2NameWithUser, Namespace: framework.NamespaceName}, ingress2)
@@ -204,7 +193,7 @@ func updateIngress2(user string) framework.TestResp {
 	framework.ExpectNoError(err)
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
-	clog.Debug("get ingress cookie response: %s", string(body))
+	clog.Info("get ingress cookie response: %s", string(body))
 	framework.ExpectNoError(err)
 
 	if !framework.IsSuccess(resp.StatusCode) {
@@ -215,7 +204,7 @@ func updateIngress2(user string) framework.TestResp {
 	framework.ExpectEqual(resp.StatusCode, http.StatusOK)
 	err = wait.Poll(waitInterval, waitTimeout,
 		func() (bool, error) {
-			err = framework.PivotConvertClient.Get(ctx, types.NamespacedName{Name: ingress2NameWithUser, Namespace: framework.NamespaceName}, ingress2)
+			err = framework.TargetConvertClient.Get(ctx, types.NamespacedName{Name: ingress2NameWithUser, Namespace: framework.NamespaceName}, ingress2)
 			framework.ExpectNoError(err)
 			if ingress2.Annotations["nginx.ingress.kubernetes.io/affinity"] == "cookie" {
 				return true, nil
@@ -253,7 +242,7 @@ func accessIngress2(user string) framework.TestResp {
 }
 
 func deleteIngress2(user string) framework.TestResp {
-	framework.ExpectNoError(framework.PivotConvertClient.Delete(ctx, ingress2))
+	framework.ExpectNoError(framework.TargetConvertClient.Delete(ctx, ingress2))
 	return framework.SucceedResp
 }
 
