@@ -213,8 +213,17 @@ var multiUserTest = framework.MultiUserTest{
 	ErrorFunc:       framework.PermissionErrorFunc,
 	AfterEach:       nil,
 	BeforeEach:      nil,
-	InitStep:        nil,
-	FinalStep:       nil,
+	InitStep: &framework.MultiUserTestStep{
+		Name:        "删除 CRD",
+		Description: "0. 删除CRD crontabs.stable.example.com",
+		StepFunc:    deleteCRD,
+		ExpectPass: map[string]bool{
+			framework.UserAdmin:        true,
+			framework.UserTenantAdmin:  false,
+			framework.UserProjectAdmin: false,
+			framework.UserNormal:       false},
+	},
+	FinalStep: nil,
 	Steps: []framework.MultiUserTestStep{
 		{
 			Name:        "创建CRD",
