@@ -193,7 +193,7 @@ func updateIngress2(user string) framework.TestResp {
 	framework.ExpectNoError(err)
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
-	clog.Debug("get ingress cookie response: %s", string(body))
+	clog.Info("get ingress cookie response: %s", string(body))
 	framework.ExpectNoError(err)
 
 	if !framework.IsSuccess(resp.StatusCode) {

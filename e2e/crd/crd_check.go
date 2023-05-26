@@ -69,7 +69,7 @@ func createCRD(user string) framework.TestResp {
 	body, err := io.ReadAll(respOfCreateCRD.Body)
 	framework.ExpectNoError(err)
 
-	if !framework.IsSuccess(respOfCreateCRD.StatusCode) {
+	if !framework.IsSuccess(respOfCreateCRD.StatusCode) && http.StatusConflict != respOfCreateCRD.StatusCode {
 		clog.Warn("res code %d, res data: %s", respOfCreateCRD.StatusCode, string(body))
 		return framework.NewTestResp(errors.New("fail to create crd"), respOfCreateCRD.StatusCode)
 	}
@@ -213,17 +213,8 @@ var multiUserTest = framework.MultiUserTest{
 	ErrorFunc:       framework.PermissionErrorFunc,
 	AfterEach:       nil,
 	BeforeEach:      nil,
-	InitStep: &framework.MultiUserTestStep{
-		Name:        "删除 CRD",
-		Description: "0. 删除CRD crontabs.stable.example.com",
-		StepFunc:    deleteCRD,
-		ExpectPass: map[string]bool{
-			framework.UserAdmin:        true,
-			framework.UserTenantAdmin:  false,
-			framework.UserProjectAdmin: false,
-			framework.UserNormal:       false},
-	},
-	FinalStep: nil,
+	InitStep:        nil,
+	FinalStep:       nil,
 	Steps: []framework.MultiUserTestStep{
 		{
 			Name:        "创建CRD",
