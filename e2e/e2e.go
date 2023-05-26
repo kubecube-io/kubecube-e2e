@@ -33,7 +33,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/api/rbac/v1beta1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -64,18 +64,16 @@ func RunE2ETests(t *testing.T) {
 
 // InitAll 初始化参数
 func InitAll() error {
-	// init client-go client
-	clients.InitCubeClientSetWithOpts(nil)
 	// Read config and init global v
 	err := framework.InitGlobalV()
 	if err != nil {
-		clog.Debug(err.Error())
+		clog.Info(err.Error())
 		return err
 	}
 
 	err = framework.InitMultiConfig()
 	if err != nil {
-		clog.Debug(err.Error())
+		clog.Info(err.Error())
 		return err
 	}
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
@@ -146,23 +144,23 @@ func Clear() error {
 
 func deleteUserInKubecube(ctx context.Context, cli client.Client, namespace string, username string) error {
 	// 解除公共权限绑定
-	clusterRoleBinding := v1beta1.ClusterRoleBinding{}
+	clusterRoleBinding := rbacv1.ClusterRoleBinding{}
 	clusterRoleBinding.Name = framework.TenantAdmin + "-in-cluster"
 	clog.Info("[clusterRoleBinding] delete clusterRoleBinding %v", clusterRoleBinding.Name)
 	err := cli.Delete(ctx, &clusterRoleBinding)
 	if err != nil && !kerrors.IsNotFound(err) {
-		clog.Debug("delete clusterRoleBinding fail, %v", err)
+		clog.Info("delete clusterRoleBinding fail, %v", err)
 		return err
 	}
 
 	// 解除专用权限绑定
-	roleBinding := v1beta1.RoleBinding{}
+	roleBinding := rbacv1.RoleBinding{}
 	roleBinding.Name = framework.TenantAdmin + "-in-" + namespace
 	roleBinding.Namespace = namespace
 	clog.Info("[roleBinding] delete roleBinding %v, namespace %v", roleBinding.Name, roleBinding.Namespace)
 	err = cli.Delete(ctx, &roleBinding)
 	if err != nil && !kerrors.IsNotFound(err) {
-		clog.Debug("delete roleBinding fail, %v", err)
+		clog.Info("delete roleBinding fail, %v", err)
 		return err
 	}
 
@@ -171,7 +169,7 @@ func deleteUserInKubecube(ctx context.Context, cli client.Client, namespace stri
 	user.Name = username
 	err = cli.Delete(ctx, &user)
 	if err != nil && !kerrors.IsNotFound(err) {
-		clog.Debug("delete user fail, %v", err)
+		clog.Info("delete user fail, %v", err)
 		return err
 	}
 	return nil
@@ -456,18 +454,18 @@ func createUser(accountId string, accountPassword string) error {
 
 func createTenantAdminRoleBindings(username string, tenant string) error {
 	ctx := context.Background()
-	rolebindng := &v1beta1.RoleBinding{}
+	rolebindng := &rbacv1.RoleBinding{}
 	rolebindng.Name = username + "-in-kubecube-tenant-" + tenant
 	rolebindng.Namespace = "kubecube-tenant-" + tenant
-	clusterrole := v1beta1.RoleRef{
+	clusterrole := rbacv1.RoleRef{
 		Kind: "ClusterRole",
 		Name: constants.TenantAdmin,
 	}
-	user := v1beta1.Subject{
+	user := rbacv1.Subject{
 		Kind: "User",
 		Name: username,
 	}
-	rolebindng.Subjects = []v1beta1.Subject{user}
+	rolebindng.Subjects = []rbacv1.Subject{user}
 	rolebindng.RoleRef = clusterrole
 	annotations := make(map[string]string)
 	annotations[constants.SyncAnnotation] = "true"
@@ -481,18 +479,18 @@ func createTenantAdminRoleBindings(username string, tenant string) error {
 
 func createProjectAdminRoleBindings(username string, tenant string, project string) error {
 	ctx := context.Background()
-	rolebindng := &v1beta1.RoleBinding{}
+	rolebindng := &rbacv1.RoleBinding{}
 	rolebindng.Name = username + "-in-kubecube-project-" + project
 	rolebindng.Namespace = "kubecube-project-" + project
-	clusterrole := v1beta1.RoleRef{
+	clusterrole := rbacv1.RoleRef{
 		Kind: "ClusterRole",
 		Name: constants.ProjectAdmin,
 	}
-	user := v1beta1.Subject{
+	user := rbacv1.Subject{
 		Kind: "User",
 		Name: username,
 	}
-	rolebindng.Subjects = []v1beta1.Subject{user}
+	rolebindng.Subjects = []rbacv1.Subject{user}
 	rolebindng.RoleRef = clusterrole
 	annotations := make(map[string]string)
 	annotations[constants.SyncAnnotation] = "true"
@@ -507,18 +505,18 @@ func createProjectAdminRoleBindings(username string, tenant string, project stri
 
 func createProjectViewerRoleBindings(username string, tenant string, project string) error {
 	ctx := context.Background()
-	rolebindng := &v1beta1.RoleBinding{}
+	rolebindng := &rbacv1.RoleBinding{}
 	rolebindng.Name = username + "-in-kubecube-project-" + project
 	rolebindng.Namespace = "kubecube-project-" + project
-	clusterrole := v1beta1.RoleRef{
+	clusterrole := rbacv1.RoleRef{
 		Kind: "ClusterRole",
 		Name: constants.Reviewer,
 	}
-	user := v1beta1.Subject{
+	user := rbacv1.Subject{
 		Kind: "User",
 		Name: username,
 	}
-	rolebindng.Subjects = []v1beta1.Subject{user}
+	rolebindng.Subjects = []rbacv1.Subject{user}
 	rolebindng.RoleRef = clusterrole
 	annotations := make(map[string]string)
 	annotations[constants.SyncAnnotation] = "true"

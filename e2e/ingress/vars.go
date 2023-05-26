@@ -20,19 +20,17 @@ import (
 	"context"
 	"time"
 
-	v12 "k8s.io/api/apps/v1"
-	v13 "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/api/extensions/v1beta1"
 )
 
 var (
 	httpHelper *framework.HttpHelper
 
-	deploy1  *v12.Deployment
-	svc1     *v13.Service
+	deploy1  *appsv1.Deployment
+	svc1     *corev1.Service
 	ingress1 *v1beta1.Ingress
 	ingress2 *v1beta1.Ingress
 
@@ -50,14 +48,12 @@ var (
 
 	waitInterval time.Duration
 	waitTimeout  time.Duration
-	cli          client.Client
 )
 
 func initParam() {
 	httpHelper = framework.NewSingleHttpHelper()
 	waitInterval = framework.WaitInterval
 	waitTimeout = framework.WaitTimeout
-	cli = framework.PivotClusterClient.Direct()
 }
 
 func init() {
