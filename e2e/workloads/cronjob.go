@@ -47,7 +47,7 @@ func createCronjob(user string) framework.TestResp {
 	defer cronJobResp.Body.Close()
 	body, err := io.ReadAll(cronJobResp.Body)
 	framework.ExpectNoError(err)
-	clog.Info("create cronJob %v, %v", cronJobNameWithUser, string(body))
+	clog.Debug("create cronJob %v, %v", cronJobNameWithUser, string(body))
 
 	if !framework.IsSuccess(cronJobResp.StatusCode) {
 		clog.Warn("res code %d", cronJobResp.StatusCode)
@@ -86,7 +86,7 @@ func checkCronjobCreate(user string) framework.TestResp {
 			}
 		})
 	framework.ExpectNoError(err)
-	clog.Info("cronjob status: %v", cronJob.Status)
+	clog.Debug("cronjob status: %v", cronJob.Status)
 	return framework.SucceedResp
 }
 
@@ -105,7 +105,7 @@ func checkCronjobInfo(user string) framework.TestResp {
 			}
 		})
 	framework.ExpectNoError(err)
-	clog.Info("查看CronJob列表信息")
+	clog.Debug("查看CronJob列表信息")
 	framework.ExpectEqual(cronJob.Name, cronJobNameWithUser)
 	framework.ExpectEqual(cronJob.Namespace, framework.NamespaceName)
 	framework.ExpectEqual(cronJob.Spec.Schedule, "*/1 * * * *")

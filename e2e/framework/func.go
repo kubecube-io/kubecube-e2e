@@ -52,7 +52,7 @@ func NewTestRespWithErr(err error) TestResp {
 
 func DefaultErrorFunc(resp TestResp) {
 	if resp.Err != nil {
-		clog.Info(resp.Err.Error())
+		clog.Debug(resp.Err.Error())
 	}
 	ExpectError(resp.Err, "should be error")
 }
@@ -62,7 +62,7 @@ func DefaultSkipFunc() bool {
 }
 
 func PermissionErrorFunc(resp TestResp) {
-	clog.Info("res code %v", resp)
+	clog.Debug("res code %v", resp)
 	ExpectEqual(resp.Data, 403)
 }
 

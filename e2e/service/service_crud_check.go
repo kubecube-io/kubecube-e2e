@@ -188,7 +188,7 @@ func listService(user string) framework.TestResp {
 	framework.ExpectEqual(resp.StatusCode, http.StatusOK)
 	body, err := io.ReadAll(resp.Body)
 	framework.ExpectNoError(err)
-	clog.Info("svc list %s", string(body))
+	clog.Debug("svc list %s", string(body))
 	var result map[string]interface{}
 	err = json.Unmarshal(body, &result)
 	framework.ExpectNoError(err)

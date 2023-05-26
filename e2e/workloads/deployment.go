@@ -47,7 +47,7 @@ func createDeployWithPvc(user string) framework.TestResp {
 	defer pv1Response.Body.Close()
 	body, err := io.ReadAll(pv1Response.Body)
 	framework.ExpectNoError(err)
-	clog.Info("get pvc pv1, %v", string(body))
+	clog.Debug("get pvc pv1, %v", string(body))
 
 	if !framework.IsSuccess(pv1Response.StatusCode) {
 		clog.Warn("res code %d", pv1Response.StatusCode)
@@ -61,7 +61,7 @@ func createDeployWithPvc(user string) framework.TestResp {
 	defer pv2Response.Body.Close()
 	body, err = io.ReadAll(pv2Response.Body)
 	framework.ExpectNoError(err)
-	clog.Info("get pvc pv2, %v", string(body))
+	clog.Debug("get pvc pv2, %v", string(body))
 
 	if !framework.IsSuccess(pv2Response.StatusCode) {
 		clog.Warn("res code %d", pv2Response.StatusCode)
@@ -82,7 +82,7 @@ func createDeployWithPvc(user string) framework.TestResp {
 	defer deployResponse.Body.Close()
 	body, err = io.ReadAll(deployResponse.Body)
 	framework.ExpectNoError(err)
-	clog.Info("create deploy %v, %v", deployNameWithUser, string(body))
+	clog.Debug("create deploy %v, %v", deployNameWithUser, string(body))
 
 	if !framework.IsSuccess(deployResponse.StatusCode) {
 		clog.Warn("res code %d", deployResponse.StatusCode)
@@ -121,7 +121,7 @@ func createDeployWithoutPvc(user string) framework.TestResp {
 	defer deployResponse.Body.Close()
 	body, err := io.ReadAll(deployResponse.Body)
 	framework.ExpectNoError(err)
-	clog.Info("create deploy %v, %v", deployNameWithUser, string(body))
+	clog.Debug("create deploy %v, %v", deployNameWithUser, string(body))
 
 	if !framework.IsSuccess(deployResponse.StatusCode) {
 		clog.Warn("res code %d", deployResponse.StatusCode)
@@ -152,10 +152,10 @@ func createDeploy(user string) framework.TestResp {
 	pv2NameWithUser = framework.NameWithUser(pv2Name, user)
 	deployNameWithUser = framework.NameWithUser(deployName, user)
 	if framework.PVEnabled {
-		clog.Info("createDeployWithPv")
+		clog.Debug("createDeployWithPv")
 		return createDeployWithPvc(user)
 	} else {
-		clog.Info("createDeployWithoutPv")
+		clog.Debug("createDeployWithoutPv")
 		return createDeployWithoutPvc(user)
 	}
 }
@@ -167,7 +167,7 @@ func checkDeploy(user string) framework.TestResp {
 		Namespace: framework.NamespaceName,
 	}, &deploy)
 	framework.ExpectNoError(err)
-	clog.Info("create deployment status: %v", deploy.Status)
+	clog.Debug("create deployment status: %v", deploy.Status)
 	framework.ExpectEqual(deploy.Name, deployNameWithUser)
 	var i int32
 	i = 1
@@ -399,7 +399,7 @@ func updateDeployConfig(user string) framework.TestResp {
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	framework.ExpectNoError(err)
-	clog.Info("update deploy resp: %s", string(body))
+	clog.Debug("update deploy resp: %s", string(body))
 
 	if !framework.IsSuccess(resp.StatusCode) {
 		clog.Warn("res code %d", resp.StatusCode)
@@ -520,7 +520,7 @@ func resetDeployReplica(user string) framework.TestResp {
 			}
 		})
 	framework.ExpectNoError(err)
-	clog.Info("update deployment status: %v", deploy.Status)
+	clog.Debug("update deployment status: %v", deploy.Status)
 	framework.ExpectEqual(deploy.Status.Replicas, int32(1))
 	return framework.SucceedResp
 }
@@ -534,7 +534,7 @@ func setDeployHpa(user string) framework.TestResp {
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	framework.ExpectNoError(err)
-	clog.Info("get hap response, %v", string(body))
+	clog.Debug("get hap response, %v", string(body))
 
 	if !framework.IsSuccess(resp.StatusCode) {
 		clog.Warn("res code %d", resp.StatusCode)
@@ -559,7 +559,7 @@ func checkDeployHpa(user string) framework.TestResp {
 			}
 		})
 	framework.ExpectNoError(err)
-	clog.Info("hpa deployment status: %v", deploy.Status)
+	clog.Debug("hpa deployment status: %v", deploy.Status)
 	framework.ExpectEqual(deploy.Status.Replicas, int32(2))
 	return framework.SucceedResp
 }
@@ -570,7 +570,7 @@ func deleteDeployHpa(user string) framework.TestResp {
 	framework.ExpectNoError(err)
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
-	clog.Info("delete hpa: %+v", string(body))
+	clog.Debug("delete hpa: %+v", string(body))
 
 	if !framework.IsSuccess(resp.StatusCode) {
 		clog.Warn("res code %d", resp.StatusCode)
@@ -585,7 +585,7 @@ func deleteDeploy(user string) framework.TestResp {
 	framework.ExpectNoError(err)
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
-	clog.Info("delete deploy: %+v", string(body))
+	clog.Debug("delete deploy: %+v", string(body))
 
 	if !framework.IsSuccess(resp.StatusCode) {
 		clog.Warn("res code %d", resp.StatusCode)
@@ -598,7 +598,7 @@ func deleteDeploy(user string) framework.TestResp {
 		framework.ExpectNoError(err)
 		defer resp.Body.Close()
 		body, err = io.ReadAll(resp.Body)
-		clog.Info("delete pv1: %+v", string(body))
+		clog.Debug("delete pv1: %+v", string(body))
 
 		if !framework.IsSuccess(resp.StatusCode) {
 			clog.Warn("res code %d", resp.StatusCode)
@@ -610,7 +610,7 @@ func deleteDeploy(user string) framework.TestResp {
 		framework.ExpectNoError(err)
 		defer resp.Body.Close()
 		body, err = io.ReadAll(resp.Body)
-		clog.Info("delete pv2: %+v", string(body))
+		clog.Debug("delete pv2: %+v", string(body))
 
 		if !framework.IsSuccess(resp.StatusCode) {
 			clog.Warn("res code %d", resp.StatusCode)

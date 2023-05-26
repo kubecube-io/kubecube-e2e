@@ -87,17 +87,17 @@ func initializeResources() error {
 	clog.Info("[Before] create user: %v, tenant user: %v, project user: %v", framework.User, framework.TenantAdmin, framework.ProjectAdmin)
 	err = createUser(framework.TenantAdmin, framework.TenantAdminPassword)
 	if err != nil && !errors.IsAlreadyExists(err) {
-		clog.Info("[Before] create user %s in platform err: %v", framework.TenantAdmin, err)
+		clog.Debug("[Before] create user %s in platform err: %v", framework.TenantAdmin, err)
 		return err
 	}
 	err = createUser(framework.ProjectAdmin, framework.ProjectAdminPassword)
 	if err != nil && !errors.IsAlreadyExists(err) {
-		clog.Info("[Before] create user %s in platform err: %v", framework.ProjectAdmin, err)
+		clog.Debug("[Before] create user %s in platform err: %v", framework.ProjectAdmin, err)
 		return err
 	}
 	err = createUser(framework.User, framework.UserPassword)
 	if err != nil && !errors.IsAlreadyExists(err) {
-		clog.Info("[Before] create user %s in platform err: %v", framework.User, err)
+		clog.Debug("[Before] create user %s in platform err: %v", framework.User, err)
 		return err
 	}
 
@@ -142,19 +142,19 @@ func initializeResources() error {
 	// user1-租户管理员
 	err = createTenantAdminRoleBindings(framework.TenantAdmin, framework.TenantName)
 	if err != nil {
-		clog.Info("[Before] bind tenantAdmin role err: %v", err)
+		clog.Debug("[Before] bind tenantAdmin role err: %v", err)
 		return err
 	}
 	// user2-项目管理员
 	err = createProjectAdminRoleBindings(framework.ProjectAdmin, framework.TenantName, framework.ProjectName)
 	if err != nil {
-		clog.Info("[Before] bind projectAdmin role err: %v", err)
+		clog.Debug("[Before] bind projectAdmin role err: %v", err)
 		return err
 	}
 	// user3-项目普通成员
 	err = createProjectViewerRoleBindings(framework.ProjectAdmin, framework.TenantName, framework.ProjectName)
 	if err != nil {
-		clog.Info("[Before] bind user role err: %v", err)
+		clog.Debug("[Before] bind user role err: %v", err)
 		return err
 	}
 
@@ -187,7 +187,7 @@ func initializeResources() error {
 	}
 	err = framework.PivotClusterClient.Direct().Create(ctx, &tenantQuota)
 	if err != nil && !errors.IsAlreadyExists(err) {
-		clog.Info("[Before] can not create cube resource quota: %v", err)
+		clog.Debug("[Before] can not create cube resource quota: %v", err)
 		return err
 	}
 
@@ -204,7 +204,7 @@ func initializeResources() error {
 		},
 	}
 	if err := cli.Direct().Create(ctx, subNs); err != nil && !errors.IsAlreadyExists(err) {
-		clog.Info("[Before] e2e init fail, can not create e2e subnamespace in %s, %v", framework.TargetClusterName, err)
+		clog.Debug("[Before] e2e init fail, can not create e2e subnamespace in %s, %v", framework.TargetClusterName, err)
 		return err
 	}
 	err = wait.Poll(waitInterval, waitTimeout,
@@ -218,7 +218,7 @@ func initializeResources() error {
 			}
 		})
 	if err != nil {
-		clog.Info("[Before] e2e init fail, can not find e2e namespace in %s, %v", framework.TargetClusterName, err)
+		clog.Debug("[Before] e2e init fail, can not find e2e namespace in %s, %v", framework.TargetClusterName, err)
 		return err
 	}
 
@@ -235,7 +235,7 @@ func initializeResources() error {
 				return true, errInfo
 			}
 		}); err != nil {
-		clog.Info("[Before] e2e init fail, can not find tenant resource quota in %s, %v", framework.TargetClusterName, err)
+		clog.Debug("[Before] e2e init fail, can not find tenant resource quota in %s, %v", framework.TargetClusterName, err)
 		return err
 	}
 	nsQuota := corev1.ResourceQuota{}
@@ -264,7 +264,7 @@ func initializeResources() error {
 		}
 		err = framework.TargetClusterClient.Direct().Create(context.TODO(), &nsQuota)
 		if err != nil && !errors.IsAlreadyExists(err) {
-			clog.Info("[Before] e2e init fail, can not create namespace resource quota in %s, %v", framework.TargetClusterName, err)
+			clog.Debug("[Before] e2e init fail, can not create namespace resource quota in %s, %v", framework.TargetClusterName, err)
 			return err
 		}
 	}
@@ -276,7 +276,7 @@ func initializeResources() error {
 	}
 	err = framework.PivotClusterClient.Direct().Create(ctx, ns)
 	if err != nil && !errors.IsAlreadyExists(err) {
-		clog.Info("create ns in pivot cluster error: %s", err.Error())
+		clog.Debug("create ns in pivot cluster error: %s", err.Error())
 		return err
 	}
 	// 10.create image pull secret
@@ -309,7 +309,7 @@ func clearResources() error {
 	err := targetCli.Direct().Delete(ctx, &sns)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			clog.Info("[After] delete e2e namespace fail, %v", err)
+			clog.Debug("[After] delete e2e namespace fail, %v", err)
 			return err
 		}
 	} else {
@@ -325,7 +325,7 @@ func clearResources() error {
 				}
 				return false, nil
 			}); err != nil {
-			clog.Info("[After] delete e2e namespace timeout, %v", err)
+			clog.Debug("[After] delete e2e namespace timeout, %v", err)
 			return err
 		}
 	}
@@ -368,7 +368,7 @@ func clearResources() error {
 				}
 				return false, nil
 			}); err != nil {
-			clog.Info("[After] delete project namespace timeout, %v", err)
+			clog.Debug("[After] delete project namespace timeout, %v", err)
 			return err
 		}
 	}
@@ -377,7 +377,7 @@ func clearResources() error {
 	p.Name = framework.ProjectName
 	err = pivotCli.Direct().Delete(ctx, &p)
 	if err != nil && !errors.IsNotFound(err) {
-		clog.Info("[After] delete project fail, %v", err)
+		clog.Debug("[After] delete project fail, %v", err)
 		return err
 	}
 
@@ -391,7 +391,7 @@ func clearResources() error {
 	err = pivotCli.Direct().Delete(ctx, &cubeQuota)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			clog.Info("[After] delete tenant resource quota fail: %v", err)
+			clog.Debug("[After] delete tenant resource quota fail: %v", err)
 			return err
 		}
 	}
@@ -403,7 +403,7 @@ func clearResources() error {
 	err = pivotCli.Direct().Delete(ctx, &tns)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			clog.Info("[After] delete tenant namespace fail, %v", err)
+			clog.Debug("[After] delete tenant namespace fail, %v", err)
 			return err
 		}
 	} else {
@@ -419,7 +419,7 @@ func clearResources() error {
 				}
 				return false, nil
 			}); err != nil {
-			clog.Info("[After] delete tenant namespace timeout, %v", err)
+			clog.Debug("[After] delete tenant namespace timeout, %v", err)
 			return err
 		}
 	}
@@ -427,7 +427,7 @@ func clearResources() error {
 	t.Name = framework.TenantName
 	err = pivotCli.Direct().Delete(ctx, &t)
 	if err != nil && !errors.IsNotFound(err) {
-		clog.Info("[After] delete tenant fail, %v", err)
+		clog.Debug("[After] delete tenant fail, %v", err)
 		return err
 	}
 
@@ -442,7 +442,7 @@ func clearResources() error {
 	err = targetCli.Direct().Delete(ctx, &nsQuota)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			clog.Info("[After] delete namespace resource quota fail, %v", err)
+			clog.Debug("[After] delete namespace resource quota fail, %v", err)
 			return err
 		}
 	} else {
@@ -461,7 +461,7 @@ func clearResources() error {
 				}
 				return false, nil
 			}); err != nil {
-			clog.Info("[After] delete namespace resource quota timeout, %v", err)
+			clog.Debug("[After] delete namespace resource quota timeout, %v", err)
 			return err
 		}
 	}

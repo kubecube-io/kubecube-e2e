@@ -47,7 +47,7 @@ func createDs(user string) framework.TestResp {
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	framework.ExpectNoError(err)
-	clog.Info("create daemonSet %v, %v", daemonSetNameWithUser, string(body))
+	clog.Debug("create daemonSet %v, %v", daemonSetNameWithUser, string(body))
 
 	if !framework.IsSuccess(resp.StatusCode) {
 		clog.Warn("res code %d", resp.StatusCode)
@@ -73,7 +73,7 @@ func checkDs(user string) framework.TestResp {
 			}
 		})
 	framework.ExpectNoError(err)
-	clog.Info("daemonset status: %v", ds.Status)
+	clog.Debug("daemonset status: %v", ds.Status)
 	return framework.SucceedResp
 }
 
@@ -84,7 +84,7 @@ func checkDsList(user string) framework.TestResp {
 		LabelSelector: labels.Set{"kubecube.io/app": daemonSetNameWithUser}.AsSelector(),
 	})
 	framework.ExpectNoError(err)
-	clog.Info("ds list: %v", dsList.Items)
+	clog.Debug("ds list: %v", dsList.Items)
 	framework.ExpectEqual(len(dsList.Items), 1)
 	return framework.SucceedResp
 }

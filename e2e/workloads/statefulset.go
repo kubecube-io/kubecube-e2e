@@ -50,7 +50,7 @@ func createStatefulsetWithPvc(user string) framework.TestResp {
 	framework.ExpectNoError(err)
 	body, err := io.ReadAll(resp.Body)
 	framework.ExpectNoError(err)
-	clog.Info("create statefulsets %v, %v", stsNameWithUser, string(body))
+	clog.Debug("create statefulsets %v, %v", stsNameWithUser, string(body))
 	defer resp.Body.Close()
 	if !framework.IsSuccess(resp.StatusCode) {
 		clog.Warn("res code %d", resp.StatusCode)
@@ -75,7 +75,7 @@ func createStatefulsetWithoutPvc(user string) framework.TestResp {
 	framework.ExpectNoError(err)
 	body, err := io.ReadAll(resp.Body)
 	framework.ExpectNoError(err)
-	clog.Info("create statefulsets %v, %v", stsNameWithUser, string(body))
+	clog.Debug("create statefulsets %v, %v", stsNameWithUser, string(body))
 	defer resp.Body.Close()
 	if !framework.IsSuccess(resp.StatusCode) {
 		clog.Warn("res code %d", resp.StatusCode)
@@ -89,10 +89,10 @@ func createStatefulset(user string) framework.TestResp {
 	initParam()
 	stsNameWithUser = framework.NameWithUser(stsName, user)
 	if framework.PVEnabled {
-		clog.Info("createStatefulsetWithPv")
+		clog.Debug("createStatefulsetWithPv")
 		return createStatefulsetWithPvc(user)
 	} else {
-		clog.Info("createStatefulsetWithoutPv")
+		clog.Debug("createStatefulsetWithoutPv")
 		return createStatefulsetWithoutPvc(user)
 	}
 }
@@ -282,7 +282,7 @@ func restStatefulsetReplica(user string) framework.TestResp {
 			}
 		})
 	framework.ExpectNoError(err)
-	clog.Info("update statefulset  status: %v", sts.Status)
+	clog.Debug("update statefulset  status: %v", sts.Status)
 	framework.ExpectEqual(sts.Status.Replicas, int32(1))
 	return framework.SucceedResp
 }
@@ -297,7 +297,7 @@ func createStatefulsetHpa(user string) framework.TestResp {
 
 	body, err := io.ReadAll(resp.Body)
 	framework.ExpectNoError(err)
-	clog.Info("get hap response, %v", string(body))
+	clog.Debug("get hap response, %v", string(body))
 
 	if !framework.IsSuccess(resp.StatusCode) {
 		clog.Warn("res code %d", resp.StatusCode)
@@ -322,7 +322,7 @@ func checkStatefulsetHpa(user string) framework.TestResp {
 			}
 		})
 	framework.ExpectNoError(err)
-	clog.Info("hpa statefulset  status: %v", sts.Status)
+	clog.Debug("hpa statefulset  status: %v", sts.Status)
 	framework.ExpectEqual(sts.Status.Replicas, int32(2))
 	return framework.SucceedResp
 }
@@ -333,7 +333,7 @@ func deleteStatefulsetHpa(user string) framework.TestResp {
 	framework.ExpectNoError(err)
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
-	clog.Info("delete hpa: %+v", string(body))
+	clog.Debug("delete hpa: %+v", string(body))
 
 	defer resp.Body.Close()
 	if !framework.IsSuccess(resp.StatusCode) {
@@ -350,7 +350,7 @@ func deleteStatefulset(user string) framework.TestResp {
 	framework.ExpectNoError(err)
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
-	clog.Info("delete sts: %+v", string(body))
+	clog.Debug("delete sts: %+v", string(body))
 	if !framework.IsSuccess(resp.StatusCode) {
 		clog.Warn("res code %d", resp.StatusCode)
 		return framework.NewTestResp(fmt.Errorf("fail to delete sts %s", stsNameWithUser), resp.StatusCode)
@@ -362,7 +362,7 @@ func deleteStatefulset(user string) framework.TestResp {
 		framework.ExpectNoError(err)
 		defer resp.Body.Close()
 		body, err = io.ReadAll(resp.Body)
-		clog.Info("delete pv1: %+v", string(body))
+		clog.Debug("delete pv1: %+v", string(body))
 		if !framework.IsSuccess(resp.StatusCode) {
 			clog.Warn("res code %d", resp.StatusCode)
 			return framework.NewTestResp(fmt.Errorf("fail to delete sts pv1 %s", stsNameWithUser), resp.StatusCode)
@@ -372,7 +372,7 @@ func deleteStatefulset(user string) framework.TestResp {
 		framework.ExpectNoError(err)
 		defer resp.Body.Close()
 		body, err = io.ReadAll(resp.Body)
-		clog.Info("delete pv2: %+v", string(body))
+		clog.Debug("delete pv2: %+v", string(body))
 		if !framework.IsSuccess(resp.StatusCode) {
 			clog.Warn("res code %d", resp.StatusCode)
 			return framework.NewTestResp(fmt.Errorf("fail to delete sts pv2 %s", stsNameWithUser), resp.StatusCode)

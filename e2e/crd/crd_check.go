@@ -69,7 +69,7 @@ func createCRD(user string) framework.TestResp {
 	body, err := io.ReadAll(respOfCreateCRD.Body)
 	framework.ExpectNoError(err)
 
-	if !framework.IsSuccess(respOfCreateCRD.StatusCode) && http.StatusConflict != respOfCreateCRD.StatusCode {
+	if !framework.IsSuccess(respOfCreateCRD.StatusCode) {
 		clog.Warn("res code %d, res data: %s", respOfCreateCRD.StatusCode, string(body))
 		return framework.NewTestResp(errors.New("fail to create crd"), respOfCreateCRD.StatusCode)
 	}

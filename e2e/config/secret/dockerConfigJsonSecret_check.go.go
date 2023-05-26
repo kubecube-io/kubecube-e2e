@@ -43,7 +43,7 @@ func createDockerConfigJsonSecret(user string) framework.TestResp {
 	defer respOfCreateSecret.Body.Close()
 	body, err := io.ReadAll(respOfCreateSecret.Body)
 	framework.ExpectNoError(err)
-	clog.Info("create secret resp %+v", string(body))
+	clog.Debug("create secret resp %+v", string(body))
 
 	if !framework.IsSuccess(respOfCreateSecret.StatusCode) {
 		clog.Warn("res code %d", respOfCreateSecret.StatusCode)
@@ -65,7 +65,7 @@ func createPod(user string) framework.TestResp {
 	defer respOfCreatePodWithSecret.Body.Close()
 	body, err := io.ReadAll(respOfCreatePodWithSecret.Body)
 	framework.ExpectNoError(err)
-	clog.Info("create pod resp %+v", string(body))
+	clog.Debug("create pod resp %+v", string(body))
 
 	if !framework.IsSuccess(respOfCreatePodWithSecret.StatusCode) {
 		clog.Warn("res code %d", respOfCreatePodWithSecret.StatusCode)
