@@ -67,13 +67,13 @@ func InitAll() error {
 	// Read config and init global v
 	err := framework.InitGlobalV()
 	if err != nil {
-		clog.Debug(err.Error())
+		clog.Info(err.Error())
 		return err
 	}
 
 	err = framework.InitMultiConfig()
 	if err != nil {
-		clog.Debug(err.Error())
+		clog.Info(err.Error())
 		return err
 	}
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
@@ -149,7 +149,7 @@ func deleteUserInKubecube(ctx context.Context, cli client.Client, namespace stri
 	clog.Info("[clusterRoleBinding] delete clusterRoleBinding %v", clusterRoleBinding.Name)
 	err := cli.Delete(ctx, &clusterRoleBinding)
 	if err != nil && !kerrors.IsNotFound(err) {
-		clog.Debug("delete clusterRoleBinding fail, %v", err)
+		clog.Info("delete clusterRoleBinding fail, %v", err)
 		return err
 	}
 
@@ -160,7 +160,7 @@ func deleteUserInKubecube(ctx context.Context, cli client.Client, namespace stri
 	clog.Info("[roleBinding] delete roleBinding %v, namespace %v", roleBinding.Name, roleBinding.Namespace)
 	err = cli.Delete(ctx, &roleBinding)
 	if err != nil && !kerrors.IsNotFound(err) {
-		clog.Debug("delete roleBinding fail, %v", err)
+		clog.Info("delete roleBinding fail, %v", err)
 		return err
 	}
 
@@ -169,7 +169,7 @@ func deleteUserInKubecube(ctx context.Context, cli client.Client, namespace stri
 	user.Name = username
 	err = cli.Delete(ctx, &user)
 	if err != nil && !kerrors.IsNotFound(err) {
-		clog.Debug("delete user fail, %v", err)
+		clog.Info("delete user fail, %v", err)
 		return err
 	}
 	return nil

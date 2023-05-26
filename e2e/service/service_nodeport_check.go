@@ -145,7 +145,7 @@ func checkExternalAccess(user string) framework.TestResp {
 
 	var result []string
 	body, err := io.ReadAll(resp.Body)
-	clog.Debug("externalAccessAddress %s", string(body))
+	clog.Info("externalAccessAddress %s", string(body))
 	err = json.Unmarshal(body, &result)
 	framework.ExpectNoError(err)
 	var ip string
