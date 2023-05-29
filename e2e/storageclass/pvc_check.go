@@ -264,7 +264,7 @@ var multiUserTest = framework.MultiUserTest{
 				framework.UserAdmin:        true,
 				framework.UserTenantAdmin:  true,
 				framework.UserProjectAdmin: true,
-				framework.UserNormal:       true,
+				framework.UserNormal:       false,
 			},
 		},
 		{
@@ -285,7 +285,7 @@ var multiUserTest = framework.MultiUserTest{
 				framework.UserAdmin:        true,
 				framework.UserTenantAdmin:  true,
 				framework.UserProjectAdmin: true,
-				framework.UserNormal:       true,
+				framework.UserNormal:       false,
 			},
 		},
 		{
@@ -317,7 +317,7 @@ var multiUserTest = framework.MultiUserTest{
 				framework.UserAdmin:        true,
 				framework.UserTenantAdmin:  true,
 				framework.UserProjectAdmin: true,
-				framework.UserNormal:       true,
+				framework.UserNormal:       false,
 			},
 		},
 	},

@@ -1,3 +1,20 @@
+# V1.0.3
+
+2023-05-29
+
+## Bugfix
+- fix pvc test[#8](https://github.com/kubecube-io/kubecube-e2e/pull/8)
+
+## Dependencies
+
+
+- kubecube 1.8.0
+- ginkgo 1.16.5
+- gomega 1.19.0
+- k8s 1.20.6
+- viper 1.11.0
+
+
 # V1.0.2
 
 2023-05-26
