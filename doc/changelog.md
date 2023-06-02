@@ -1,3 +1,19 @@
+# V1.0.4
+
+2023-06-02
+
+## Bugfix
+- fix ingress test[#9](https://github.com/kubecube-io/kubecube-e2e/pull/9)
+
+## Dependencies
+
+
+- kubecube 1.8.0
+- ginkgo 1.16.5
+- gomega 1.19.0
+- k8s 1.20.6
+- viper 1.11.0
+
 # V1.0.3
 
 2023-05-29
