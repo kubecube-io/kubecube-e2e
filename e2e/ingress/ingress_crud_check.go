@@ -102,7 +102,38 @@ func deleteDeployAndSvc1(user string) framework.TestResp {
 
 func createIngress(user string) framework.TestResp {
 	url := "/api/v1/cube/proxy/clusters/" + framework.TargetClusterName + "/apis/networking.k8s.io/v1/namespaces/" + framework.NamespaceName + "/ingresses"
-	postJson := fmt.Sprintf("{\"apiVersion\":\"networking.k8s.io/v1\",\"kind\":\"Ingress\",\"metadata\":{\"name\":\"%s\",\"annotations\":{\"nginx.ingress.kubernetes.io/load-balance\":\"round_robin\",\"kubernetes.io/ingress.class\":\"istio\"},\"labels\":{}},\"spec\":{\"rules\":[{\"host\":\"poctest\",\"http\":{\"paths\":[{\"path\":\"/test\",\"pathType\":\"ImplementationSpecific\",\"backend\":{\"service\":{\"name\":\"%s\",\"port\":{\"number\":8080}}}}]}}],\"tls\":[]}}", ingress1NameWithUser, svc1NameWithUser)
+	postJson := fmt.Sprintf(`{
+	"apiVersion": "networking.k8s.io/v1",
+	"kind": "Ingress",
+	"metadata": {
+		"name": "%s",
+		"annotations": {
+			"nginx.ingress.kubernetes.io/load-balance": "round_robin",
+			"kubernetes.io/ingress.class": "istio"
+		},
+		"labels": {}
+	},
+	"spec": {
+		"rules": [{
+			"host": "poctest",
+			"http": {
+				"paths": [{
+					"path": "/test",
+					"pathType": "ImplementationSpecific",
+					"backend": {
+						"service": {
+							"name": "%s",
+							"port": {
+								"number": 8080
+							}
+						}
+					}
+				}]
+			}
+		}],
+		"tls": []
+	}
+}`, ingress1NameWithUser, svc1NameWithUser)
 	resp, err := httpHelper.RequestByUser(http.MethodPost, framework.KubecubeHost+url, postJson, user, nil)
 	framework.ExpectNoError(err)
 	defer resp.Body.Close()
@@ -145,8 +176,42 @@ func updateIngress(user string) framework.TestResp {
 	framework.ExpectNoError(err)
 
 	url := "/api/v1/cube/proxy/clusters/" + framework.TargetClusterName + "/apis/networking.k8s.io/v1/namespaces/" + framework.NamespaceName + "/ingresses/" + ingress1NameWithUser
-	postJson := fmt.Sprintf("{\"metadata\":{\"namespace\":\"%s\",\"pureLabels\":{},\"resourceVersion\":\"%s\",\"uid\":\"%s\",\"name\":\"%s\",\"annotations\":{\"kubernetes.io/ingress.class\":\"istio\",\"nginx.ingress.kubernetes.io/load-balance\":\"round_robin\"},\"labels\":{}},\"spec\":{\"rules\":[{\"host\":\"poctest\",\"http\":{\"paths\":[{\"path\":\"/test2\",\"pathType\":\"ImplementationSpecific\",\"backend\":{\"service\":{\"name\":\"%s\",\"port\":{\"number\":8080}}}}]}}],\"tls\":[]}}",
-		framework.NamespaceName, ingress.ResourceVersion, ingress.UID, ingress1NameWithUser, svc1NameWithUser)
+	postJson := fmt.Sprintf(`{
+	"apiVersion": "networking.k8s.io/v1",
+	"kind": "Ingress",
+	"metadata": {
+		"namespace": "%s",
+		"pureLabels": {},
+		"resourceVersion": "%s",
+		"uid": "%s",
+		"name": "%s",
+		"annotations": {
+			"kubernetes.io/ingress.class": "istio",
+			"nginx.ingress.kubernetes.io/load-balance": "round_robin"
+		},
+		"labels": {}
+	},
+	"spec": {
+		"rules": [{
+			"host": "poctest",
+			"http": {
+				"paths": [{
+					"path": "/test2",
+					"pathType": "ImplementationSpecific",
+					"backend": {
+						"service": {
+							"name": "%s",
+							"port": {
+								"number": 8080
+							}
+						}
+					}
+				}]
+			}
+		}],
+		"tls": []
+	}
+}`, framework.NamespaceName, ingress.ResourceVersion, ingress.UID, ingress1NameWithUser, svc1NameWithUser)
 	resp, err := httpHelper.RequestByUser(http.MethodPut, framework.KubecubeHost+url, postJson, user, nil)
 	framework.ExpectNoError(err)
 	defer resp.Body.Close()
