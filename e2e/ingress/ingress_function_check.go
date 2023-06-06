@@ -187,7 +187,44 @@ func updateIngress2(user string) framework.TestResp {
 			}
 		})
 	framework.ExpectNoError(err)
-	postJson := fmt.Sprintf("{\"metadata\":{\"namespace\":\"%s\",\"pureLabels\":{},\"resourceVersion\":\"%s\",\"uid\":\"%s\",\"name\":\"%s\",\"annotations\":{\"nginx.ingress.kubernetes.io/load-balance\":\"round_robin\",\"nginx.ingress.kubernetes.io/affinity\":\"cookie\",\"nginx.ingress.kubernetes.io/session-cookie-hash\":\"md5\",\"nginx.ingress.kubernetes.io/session-cookie-name\":\"qz_t\"},\"labels\":{}},\"spec\":{\"rules\":[{\"host\":\"%s\",\"http\":{\"paths\":[{\"pathType\":\"ImplementationSpecific\",\"path\":\"/%s\",\"backend\":{\"service\":{\"name\":\"%s\",\"port\":{\"number\":80}}}}]}}],\"tls\":[]}}",
+	postJson := fmt.Sprintf(`{
+    "apiVersion": "networking.k8s.io/v1",
+	"kind": "Ingress",
+	"metadata": {
+		"namespace": "%s",
+		"pureLabels": {},
+		"resourceVersion": "%s",
+		"uid": "%s",
+		"name": "%s",
+		"annotations": {
+			"nginx.ingress.kubernetes.io/load-balance": "round_robin",
+			"nginx.ingress.kubernetes.io/affinity": "cookie",
+			"nginx.ingress.kubernetes.io/session-cookie-hash": "md5",
+			"nginx.ingress.kubernetes.io/session-cookie-name": "qz_t"
+		},
+		"labels": {}
+	},
+	"spec": {
+		"rules": [{
+			"host": "%s",
+			"http": {
+				"paths": [{
+					"pathType": "ImplementationSpecific",
+					"path": "/%s",
+					"backend": {
+						"service": {
+							"name": "%s",
+							"port": {
+								"number": 80
+							}
+						}
+					}
+				}]
+			}
+		}],
+		"tls": []
+	}
+}`,
 		framework.NamespaceName, ingress2.ResourceVersion, ingress2.UID, ingress2NameWithUser, ingressAddr, user, svc1NameWithUser)
 	resp, err := httpHelper.RequestByUser(http.MethodPut, framework.KubecubeHost+url, postJson, user, nil)
 	framework.ExpectNoError(err)
