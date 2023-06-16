@@ -22,7 +22,7 @@ import (
 
 	v12 "k8s.io/api/apps/v1"
 	v13 "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
@@ -33,7 +33,7 @@ var (
 	deploy1      *v12.Deployment
 	deploy2      *v12.Deployment
 	svc1         *v13.Service
-	ingress1     *v1beta1.Ingress
+	ingress1     *networkingv1.Ingress
 	ns1          *v13.Namespace
 	httpHelper   *framework.HttpHelper
 	waitInterval time.Duration

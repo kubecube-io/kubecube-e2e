@@ -26,7 +26,7 @@ import (
 	"github.com/kubecube-io/kubecube/pkg/clog"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -126,7 +126,7 @@ func createIngress2(user string) framework.TestResp {
 	}
 
 	framework.ExpectEqual(resp.StatusCode, http.StatusCreated)
-	ingress2 = &v1beta1.Ingress{}
+	ingress2 = &networkingv1.Ingress{}
 	err = wait.Poll(waitInterval, waitTimeout,
 		func() (bool, error) {
 			err = framework.TargetConvertClient.Get(ctx, types.NamespacedName{Name: ingress2NameWithUser, Namespace: framework.NamespaceName}, ingress2)
