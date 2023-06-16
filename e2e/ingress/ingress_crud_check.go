@@ -26,9 +26,10 @@ import (
 	"github.com/kubecube-io/kubecube/pkg/clog"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
+
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -171,7 +172,7 @@ func listIngress(user string) framework.TestResp {
 }
 
 func updateIngress(user string) framework.TestResp {
-	ingress := &v1beta1.Ingress{}
+	ingress := &networkingv1.Ingress{}
 	err := framework.TargetClusterClient.Direct().Get(ctx, types.NamespacedName{Name: ingress1NameWithUser, Namespace: framework.NamespaceName}, ingress)
 	framework.ExpectNoError(err)
 
@@ -241,7 +242,7 @@ func checkIngress(user string) framework.TestResp {
 	framework.ExpectEqual(resp.StatusCode, http.StatusOK)
 	body, err := io.ReadAll(resp.Body)
 	framework.ExpectNoError(err)
-	ingress := v1beta1.Ingress{}
+	ingress := networkingv1.Ingress{}
 	err = json.Unmarshal(body, &ingress)
 	framework.ExpectNoError(err)
 	framework.ExpectEqual(ingress.Name, ingress1NameWithUser)
@@ -262,7 +263,7 @@ func deleteIngress(user string) framework.TestResp {
 
 	// check return success
 	framework.ExpectEqual(resp.StatusCode, http.StatusOK)
-	ingress := v1beta1.Ingress{}
+	ingress := networkingv1.Ingress{}
 	err = framework.TargetConvertClient.Get(ctx, types.NamespacedName{Name: ingress1NameWithUser, Namespace: framework.NamespaceName}, &ingress)
 	framework.ExpectEqual(true, kerrors.IsNotFound(err))
 	return framework.SucceedResp
