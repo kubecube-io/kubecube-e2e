@@ -26,7 +26,7 @@ import (
 	"github.com/kubecube-io/kubecube/pkg/clog"
 	v12 "k8s.io/api/apps/v1"
 	v13 "k8s.io/api/core/v1"
-	"k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -84,20 +84,27 @@ func createDeployAndService(user string) framework.TestResp {
 	err = framework.TargetClusterClient.Direct().Create(ctx, svc1)
 	framework.ExpectNoError(err)
 
-	ingress1 = &v1beta1.Ingress{
+	pathType := networkingv1.PathTypeImplementationSpecific
+
+	ingress1 = &networkingv1.Ingress{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      ingress1NameWithUser,
 			Namespace: framework.NamespaceName,
 		},
-		Spec: v1beta1.IngressSpec{
-			Rules: []v1beta1.IngressRule{
-				{Host: hostWithName, IngressRuleValue: v1beta1.IngressRuleValue{
-					HTTP: &v1beta1.HTTPIngressRuleValue{
-						Paths: []v1beta1.HTTPIngressPath{
+		Spec: networkingv1.IngressSpec{
+			Rules: []networkingv1.IngressRule{
+				{Host: hostWithName, IngressRuleValue: networkingv1.IngressRuleValue{
+					HTTP: &networkingv1.HTTPIngressRuleValue{
+						Paths: []networkingv1.HTTPIngressPath{
 							{
-								Backend: v1beta1.IngressBackend{
-									ServiceName: service1NameWithUser,
-									ServicePort: intstr.FromInt(8080),
+								PathType: &pathType,
+								Backend: networkingv1.IngressBackend{
+									Service: &networkingv1.IngressServiceBackend{
+										Name: service1NameWithUser,
+										Port: networkingv1.ServiceBackendPort{
+											Number: 8080,
+										},
+									},
 								},
 							},
 						},
