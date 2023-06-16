@@ -84,6 +84,8 @@ func createDeployAndService(user string) framework.TestResp {
 	err = framework.TargetClusterClient.Direct().Create(ctx, svc1)
 	framework.ExpectNoError(err)
 
+	pathType := networkingv1.PathTypeImplementationSpecific
+
 	ingress1 = &networkingv1.Ingress{
 		ObjectMeta: v1.ObjectMeta{
 			Name:      ingress1NameWithUser,
@@ -95,6 +97,7 @@ func createDeployAndService(user string) framework.TestResp {
 					HTTP: &networkingv1.HTTPIngressRuleValue{
 						Paths: []networkingv1.HTTPIngressPath{
 							{
+								PathType: &pathType,
 								Backend: networkingv1.IngressBackend{
 									Service: &networkingv1.IngressServiceBackend{
 										Name: service1NameWithUser,
