@@ -3,7 +3,11 @@
 2023-07-24
 
 ## Bugfix
-- fix service event test [#11](https://github.com/kubecube-io/kubecube-e2e/pull/11)
+- fix test bug
+  - fix service event test
+  - fix ingress crud test
+  - fix crd test  
+  [#11](https://github.com/kubecube-io/kubecube-e2e/pull/11)
 
 ## Dependencies
 
