@@ -93,14 +93,9 @@ func createCR(user string) framework.TestResp {
 		Version: "v1",
 		Kind:    "CronTab",
 	})
-	err := cli.Direct().Get(context.Background(), client2.ObjectKey{
-		Namespace: namespace,
-		Name:      crWithUser,
-	}, checkOfCreateCR)
-	if err == nil {
-		err := cli.Direct().Delete(context.Background(), checkOfCreateCR)
-		framework.ExpectNoError(err)
-	}
+	checkOfCreateCR.SetNamespace(namespace)
+	checkOfCreateCR.SetName(crWithUser)
+	_ = cli.Direct().Delete(context.Background(), checkOfCreateCR)
 	postJsonOfCreateCR := `{"apiVersion":"%s/v1","kind":"CronTab","metadata":{"labels":{"system/project-project1":"true","system/tenant":"tenant1"},"name":"%s","namespace":"%s"},"spec":{"image":"%s","cronSpec":"*****/5"}}`
 	postJsonOfCreateCR = fmt.Sprintf(postJsonOfCreateCR, crdGroupWithUser, crWithUser, namespace, framework.TestImage)
 	urlOfCreateCR := "%s/api/v1/cube/proxy/clusters/%s/apis/%s/v1/namespaces/%s/crontabs"
