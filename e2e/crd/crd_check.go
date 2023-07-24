@@ -87,6 +87,20 @@ func createCR(user string) framework.TestResp {
 	initParam()
 	crdGroupWithUser := fmt.Sprintf(crdGroup, user)
 	crWithUser := framework.NameWithUser(cr, user)
+	checkOfCreateCR = &unstructured.Unstructured{}
+	checkOfCreateCR.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   crdGroupWithUser,
+		Version: "v1",
+		Kind:    "CronTab",
+	})
+	err := cli.Direct().Get(context.Background(), client2.ObjectKey{
+		Namespace: namespace,
+		Name:      crWithUser,
+	}, checkOfCreateCR)
+	if err == nil {
+		err := cli.Direct().Delete(context.Background(), checkOfCreateCR)
+		framework.ExpectNoError(err)
+	}
 	postJsonOfCreateCR := `{"apiVersion":"%s/v1","kind":"CronTab","metadata":{"labels":{"system/project-project1":"true","system/tenant":"tenant1"},"name":"%s","namespace":"%s"},"spec":{"image":"%s","cronSpec":"*****/5"}}`
 	postJsonOfCreateCR = fmt.Sprintf(postJsonOfCreateCR, crdGroupWithUser, crWithUser, namespace, framework.TestImage)
 	urlOfCreateCR := "%s/api/v1/cube/proxy/clusters/%s/apis/%s/v1/namespaces/%s/crontabs"
@@ -95,18 +109,10 @@ func createCR(user string) framework.TestResp {
 	defer respOfCreateCR.Body.Close()
 	_, err = io.ReadAll(respOfCreateCR.Body)
 	framework.ExpectNoError(err)
-
 	if !framework.IsSuccess(respOfCreateCR.StatusCode) {
 		clog.Warn("res code %d", respOfCreateCR.StatusCode)
 		return framework.NewTestResp(errors.New("fail to create cr"), respOfCreateCR.StatusCode)
 	}
-
-	checkOfCreateCR = &unstructured.Unstructured{}
-	checkOfCreateCR.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   crdGroupWithUser,
-		Version: "v1",
-		Kind:    "CronTab",
-	})
 	err = cli.Direct().Get(context.Background(), client2.ObjectKey{
 		Namespace: namespace,
 		Name:      crWithUser,
