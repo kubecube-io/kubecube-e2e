@@ -173,7 +173,7 @@ func listIngress(user string) framework.TestResp {
 
 func updateIngress(user string) framework.TestResp {
 	ingress := &networkingv1.Ingress{}
-	err := framework.TargetClusterClient.Direct().Get(ctx, types.NamespacedName{Name: ingress1NameWithUser, Namespace: framework.NamespaceName}, ingress)
+	err := framework.TargetConvertClient.Get(ctx, types.NamespacedName{Name: ingress1NameWithUser, Namespace: framework.NamespaceName}, ingress)
 	framework.ExpectNoError(err)
 
 	url := "/api/v1/cube/proxy/clusters/" + framework.TargetClusterName + "/apis/networking.k8s.io/v1/namespaces/" + framework.NamespaceName + "/ingresses/" + ingress1NameWithUser
