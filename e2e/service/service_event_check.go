@@ -113,7 +113,7 @@ func createDeployAndService(user string) framework.TestResp {
 			},
 		},
 	}
-	err = framework.TargetClusterClient.Direct().Create(ctx, ingress1)
+	err = framework.TargetConvertClient.Create(ctx, ingress1)
 	framework.ExpectNoError(err)
 	return framework.SucceedResp
 }
@@ -123,7 +123,7 @@ func deleteDeployAndService(user string) framework.TestResp {
 	framework.ExpectNoError(err)
 	err = framework.TargetClusterClient.Direct().Delete(ctx, svc1)
 	framework.ExpectNoError(err)
-	err = framework.TargetClusterClient.Direct().Delete(ctx, ingress1)
+	err = framework.TargetConvertClient.Delete(ctx, ingress1)
 	framework.ExpectNoError(err)
 	return framework.SucceedResp
 }
