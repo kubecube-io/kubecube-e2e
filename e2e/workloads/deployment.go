@@ -22,9 +22,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
-	"github.com/kubecube-io/kubecube/pkg/clog"
 	"github.com/onsi/ginkgo"
 	"github.com/tidwall/gjson"
 	v1 "k8s.io/api/apps/v1"
@@ -32,10 +30,10 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
+	"github.com/kubecube-io/kubecube/pkg/clog"
 )
 
 func createDeployWithPvc(user string) framework.TestResp {
@@ -89,7 +87,6 @@ func createDeployWithPvc(user string) framework.TestResp {
 		return framework.NewTestResp(fmt.Errorf("fail to create deploy %s", deployNameWithUser), deployResponse.StatusCode)
 	}
 
-	time.Sleep(time.Second * 10)
 	deploy := v1.Deployment{}
 	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout,
 		func() (bool, error) {
@@ -128,7 +125,6 @@ func createDeployWithoutPvc(user string) framework.TestResp {
 		return framework.NewTestResp(fmt.Errorf("fail to create deploy %s", deployNameWithUser), deployResponse.StatusCode)
 	}
 
-	time.Sleep(time.Second * 10)
 	deploy := v1.Deployment{}
 	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout,
 		func() (bool, error) {
@@ -161,30 +157,49 @@ func createDeploy(user string) framework.TestResp {
 }
 
 func checkDeploy(user string) framework.TestResp {
-	deploy := v1.Deployment{}
-	err := targetClient.Cache().Get(context.TODO(), types.NamespacedName{
-		Name:      deployNameWithUser,
-		Namespace: framework.NamespaceName,
-	}, &deploy)
+	err := wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		deploy := v1.Deployment{}
+		err = targetClient.Direct().Get(context.TODO(), types.NamespacedName{
+			Name:      deployNameWithUser,
+			Namespace: framework.NamespaceName,
+		}, &deploy)
+		if err != nil {
+			return false, err
+		}
+		framework.ExpectEqual(deploy.Name, deployNameWithUser)
+		var i int32
+		i = 1
+		if deploy.Status.AvailableReplicas != i {
+			return false, nil
+		}
+		return true, nil
+	})
+
 	framework.ExpectNoError(err)
-	clog.Info("create deployment status: %v", deploy.Status)
-	framework.ExpectEqual(deploy.Name, deployNameWithUser)
-	var i int32
-	i = 1
-	framework.ExpectEqual(deploy.Status.AvailableReplicas, i)
+
 	return framework.SucceedResp
 }
 
 func checkDeployLog(user string) framework.TestResp {
 	podList := corev1.PodList{}
-	err := targetClient.Cache().List(context.TODO(), &podList, &client.ListOptions{
-		Namespace:     framework.NamespaceName,
-		LabelSelector: labels.Set{"kubecube.io/app": deployNameWithUser}.AsSelector(),
+	err := wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		err = targetClient.Direct().List(context.TODO(), &podList, &client.ListOptions{
+			Namespace:     framework.NamespaceName,
+			LabelSelector: labels.Set{"kubecube.io/app": deployNameWithUser}.AsSelector(),
+		})
+		if err != nil {
+			return false, err
+		}
+		if len(podList.Items) != 1 {
+			return false, nil
+		}
+		return true, nil
 	})
+
 	framework.ExpectNoError(err)
-	framework.ExpectEqual(len(podList.Items), 1)
 	pod := podList.Items[0]
 	framework.ExpectEqual(len(pod.Spec.Containers), 1)
+
 	url := BuildLogUrl(framework.KubecubeHost, framework.TargetClusterName, framework.NamespaceName, pod.Name, pod.Spec.Containers[0].Name)
 	logResp, err := httpHelper.RequestByUser(http.MethodGet, url, "", user, nil)
 	framework.ExpectNoError(err)
@@ -197,7 +212,22 @@ func checkDeployLog(user string) framework.TestResp {
 		return framework.NewTestResp(fmt.Errorf("fail to get pod %s log", pod.Name), logResp.StatusCode)
 	}
 
-	framework.ExpectEqual(gjson.Get(string(body), "logs.0.content").Str, "hello")
+	if gjson.Get(string(body), "logs.0.content").Str != "hello" {
+		err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+			logResp, err := httpHelper.RequestByUser(http.MethodGet, url, "", user, nil)
+			framework.ExpectNoError(err)
+			defer logResp.Body.Close()
+			body, err := io.ReadAll(logResp.Body)
+			framework.ExpectNoError(err)
+			framework.ExpectEqual(framework.IsSuccess(logResp.StatusCode), true)
+			if gjson.Get(string(body), "logs.0.content").Str != "hello" {
+				return false, nil
+			}
+			return true, nil
+		})
+		framework.ExpectNoError(err)
+	}
+
 	return framework.SucceedResp
 }
 
@@ -407,10 +437,9 @@ func updateDeployConfig(user string) framework.TestResp {
 	}
 
 	podList := corev1.PodList{}
-	time.Sleep(time.Minute)
 	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout,
 		func() (bool, error) {
-			err = targetClient.Cache().List(context.TODO(), &podList, &client.ListOptions{
+			err = targetClient.Direct().List(context.TODO(), &podList, &client.ListOptions{
 				Namespace:     framework.NamespaceName,
 				LabelSelector: labels.Set{"kubecube.io/app": deployNameWithUser}.AsSelector(),
 			})
@@ -618,7 +647,6 @@ func deleteDeploy(user string) framework.TestResp {
 		}
 	}
 
-	time.Sleep(time.Minute)
 	return framework.SucceedResp
 }
 

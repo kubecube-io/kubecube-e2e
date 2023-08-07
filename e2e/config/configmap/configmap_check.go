@@ -22,14 +22,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
-	"time"
 
 	"github.com/kubecube-io/kubecube/pkg/clog"
 	"github.com/kubecube-io/kubecube/pkg/multicluster/client"
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"net/http"
 	client2 "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
@@ -108,7 +107,6 @@ func createPodAndCheck(user string) framework.TestResp {
 		return framework.NewTestResp(errors.New("fail to create pod"), respOfCreatePodWithCM.StatusCode)
 	}
 
-	time.Sleep(time.Second * 10)
 	checkOfCreatePodWithCM := &v1.Pod{}
 	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
 		err = cli.Direct().Get(context.Background(), client2.ObjectKey{
@@ -117,13 +115,14 @@ func createPodAndCheck(user string) framework.TestResp {
 		}, checkOfCreatePodWithCM)
 		if err != nil || checkOfCreatePodWithCM.Status.Phase != "Running" {
 			return false, err
-		} else {
-			return true, nil
 		}
+		if string(checkOfCreatePodWithCM.Status.Phase) != "Running" {
+			return false, nil
+		}
+		return true, nil
 	})
 
 	framework.ExpectNoError(err, "pod should be created")
-	framework.ExpectEqual(string(checkOfCreatePodWithCM.Status.Phase), "Running", "pod should be running")
 
 	return framework.SucceedResp
 }

@@ -23,17 +23,16 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
+	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
 	"github.com/kubecube-io/kubecube/pkg/clog"
 	"github.com/kubecube-io/kubecube/pkg/multicluster/client"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/util/wait"
 	client2 "sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
 )
 
 var (
@@ -197,13 +196,18 @@ func deleteCRD(user string) framework.TestResp {
 		return framework.NewTestResp(errors.New("fail to delete crd"), respOfDeleteCRD.StatusCode)
 	}
 
-	time.Sleep(time.Second * 10)
 	checkOfDeleteCRD := &v1.CustomResourceDefinition{}
-	err = cli.Direct().Get(context.Background(), client2.ObjectKey{
-		Namespace: namespace,
-		Name:      crdWithUser,
-	}, checkOfDeleteCRD)
-	framework.ExpectEqual(kerrors.IsNotFound(err), true, "CRD should be deleted")
+	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+			Namespace: namespace,
+			Name:      crdWithUser,
+		}, checkOfDeleteCRD)
+		if !kerrors.IsNotFound(err) {
+			return false, err
+		}
+		return true, nil
+	})
+	framework.ExpectNoError(err, "CRD should be deleted")
 	return framework.SucceedResp
 }
 

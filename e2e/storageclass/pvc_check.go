@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
 	"github.com/kubecube-io/kubecube/pkg/clog"
@@ -29,6 +28,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/wait"
 
 	client2 "sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -130,21 +130,34 @@ func createPod(user string) framework.TestResp {
 		return framework.NewTestResp(fmt.Errorf("fail to create pod %s", podNameWithUser), respOfCreatePod.StatusCode)
 	}
 
-	time.Sleep(time.Second * 30)
-
-	checkOfCreatePVC := &v1.PersistentVolumeClaim{}
-	err = cli.Direct().Get(context.Background(), client2.ObjectKey{
-		Namespace: namespace,
-		Name:      pvc1NameWithUser,
-	}, checkOfCreatePVC)
+	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		checkOfCreatePVC := &v1.PersistentVolumeClaim{}
+		err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+			Namespace: namespace,
+			Name:      pvc1NameWithUser,
+		}, checkOfCreatePVC)
+		if err != nil {
+			return false, err
+		}
+		if string(checkOfCreatePVC.Status.Phase) != "Bound" {
+			return false, nil
+		}
+		return true, nil
+	})
 	framework.ExpectNoError(err, "pvc should be created")
-	framework.ExpectEqual(string(checkOfCreatePVC.Status.Phase), "Bound", "pvc should be bound")
 
-	checkOfCreatePod := &v1.Pod{}
-	err = cli.Direct().Get(context.Background(), client2.ObjectKey{
-		Namespace: namespace,
-		Name:      podNameWithUser,
-	}, checkOfCreatePod)
+	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		checkOfCreatePod := &v1.Pod{}
+		err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+			Namespace: namespace,
+			Name:      podNameWithUser,
+		}, checkOfCreatePod)
+		if err != nil {
+			return false, err
+		}
+		return true, nil
+
+	})
 	framework.ExpectNoError(err, "pod should be created")
 
 	checkOfPVList := &v1.PersistentVolumeList{}
@@ -173,14 +186,19 @@ func deletePod(user string) framework.TestResp {
 		return framework.NewTestResp(fmt.Errorf("fail to delete pod %s", podNameWithUser), respOfDeletePod.StatusCode)
 	}
 
-	time.Sleep(time.Second * 60)
+	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		checkOfDeletePod := &v1.Pod{}
+		err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+			Namespace: namespace,
+			Name:      podNameWithUser,
+		}, checkOfDeletePod)
+		if !errors.IsNotFound(err) {
+			return false, err
+		}
+		return true, nil
+	})
+	framework.ExpectNoError(err, "pod should be delete")
 
-	checkOfDeletePod := &v1.Pod{}
-	err = cli.Direct().Get(context.Background(), client2.ObjectKey{
-		Namespace: namespace,
-		Name:      podNameWithUser,
-	}, checkOfDeletePod)
-	framework.ExpectEqual(errors.IsNotFound(err), true, "pod should be delete")
 	return framework.SucceedResp
 }
 
@@ -210,21 +228,31 @@ func deletePvc(user string) framework.TestResp {
 		return framework.NewTestResp(fmt.Errorf("fail to delete pvc %s", pvc2NameWithUser), respOfDeletePVC.StatusCode)
 	}
 
-	time.Sleep(time.Second * 20)
+	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		checkOfDeletePVC := &v1.PersistentVolumeClaim{}
+		err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+			Namespace: namespace,
+			Name:      pvc1NameWithUser,
+		}, checkOfDeletePVC)
+		if !errors.IsNotFound(err) {
+			return false, err
+		}
+		return true, nil
+	})
+	framework.ExpectNoError(err, "pvc1 should be deleted")
 
-	checkOfDeletePVC := &v1.PersistentVolumeClaim{}
-	err = cli.Direct().Get(context.Background(), client2.ObjectKey{
-		Namespace: namespace,
-		Name:      pvc1NameWithUser,
-	}, checkOfDeletePVC)
-	framework.ExpectEqual(errors.IsNotFound(err), true, "pvc should be deleted")
-
-	checkOfDeletePVC = &v1.PersistentVolumeClaim{}
-	err = cli.Direct().Get(context.Background(), client2.ObjectKey{
-		Namespace: namespace,
-		Name:      pvc2NameWithUser,
-	}, checkOfDeletePVC)
-	framework.ExpectEqual(errors.IsNotFound(err), true, "pvc should be deleted")
+	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		checkOfDeletePVC := &v1.PersistentVolumeClaim{}
+		err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+			Namespace: namespace,
+			Name:      pvc2NameWithUser,
+		}, checkOfDeletePVC)
+		if !errors.IsNotFound(err) {
+			return false, err
+		}
+		return true, nil
+	})
+	framework.ExpectNoError(err, "pvc2 should be deleted")
 
 	return framework.SucceedResp
 }
@@ -238,8 +266,6 @@ func deletePv(user string) framework.TestResp {
 	body, err := io.ReadAll(respOfDeletePV.Body)
 	clog.Info("delete pv %s", string(body))
 	framework.ExpectNoError(err)
-
-	time.Sleep(time.Second * 10)
 
 	return framework.SucceedResp
 }

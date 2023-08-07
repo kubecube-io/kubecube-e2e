@@ -22,9 +22,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
-	"github.com/kubecube-io/kubecube/pkg/clog"
 	"github.com/onsi/ginkgo"
 	v1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -34,6 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
+	"github.com/kubecube-io/kubecube/pkg/clog"
 )
 
 func createDs(user string) framework.TestResp {
@@ -54,7 +53,6 @@ func createDs(user string) framework.TestResp {
 		return framework.NewTestResp(fmt.Errorf("fail to create ds %s", daemonSetNameWithUser), resp.StatusCode)
 	}
 
-	time.Sleep(time.Second * 20)
 	return framework.SucceedResp
 }
 
@@ -151,12 +149,22 @@ func checkDsEvent(user string) framework.TestResp {
 
 func checkDsPodEvent(user string) framework.TestResp {
 	podList := corev1.PodList{}
-	err := targetClient.Cache().List(context.TODO(), &podList, &client.ListOptions{
-		Namespace:     framework.NamespaceName,
-		LabelSelector: labels.Set{"kubecube.io/app": daemonSetNameWithUser}.AsSelector(),
+	err := wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		err = targetClient.Direct().List(context.TODO(), &podList, &client.ListOptions{
+			Namespace:     framework.NamespaceName,
+			LabelSelector: labels.Set{"kubecube.io/app": daemonSetNameWithUser}.AsSelector(),
+		})
+		if err != nil {
+			return false, err
+		}
+		if len(podList.Items) == 0 {
+			return false, nil
+		}
+		return true, nil
 	})
+
 	framework.ExpectNoError(err)
-	framework.ExpectNotEqual(len(podList.Items), 0)
+
 	pod := podList.Items[0]
 	url := BuildEventUrl(framework.KubecubeHost, framework.TargetClusterName, framework.NamespaceName, string(pod.UID))
 	resp, err := httpHelper.RequestByUser(http.MethodGet, url, "", user, nil)
@@ -181,15 +189,25 @@ func checkDsPerformance(user string) framework.TestResp {
 }
 
 func checkDsCondition(user string) framework.TestResp {
-	podList := corev1.PodList{}
-	err := targetClient.Cache().List(context.TODO(), &podList, &client.ListOptions{
-		Namespace:     framework.NamespaceName,
-		LabelSelector: labels.Set{"kubecube.io/app": daemonSetNameWithUser}.AsSelector(),
+	err := wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		podList := corev1.PodList{}
+		err = targetClient.Direct().List(context.TODO(), &podList, &client.ListOptions{
+			Namespace:     framework.NamespaceName,
+			LabelSelector: labels.Set{"kubecube.io/app": daemonSetNameWithUser}.AsSelector(),
+		})
+		if err != nil {
+			return false, err
+		}
+		if len(podList.Items) == 0 {
+			return false, nil
+		}
+		pod := podList.Items[0]
+		if len(pod.Status.Conditions) == 0 {
+			return false, nil
+		}
+		return true, nil
 	})
 	framework.ExpectNoError(err)
-	framework.ExpectNotEqual(len(podList.Items), 0)
-	pod := podList.Items[0]
-	framework.ExpectNotEqual(len(pod.Status.Conditions), 0)
 	return framework.SucceedResp
 }
 
@@ -207,62 +225,81 @@ func checkDsUpdate(user string) framework.TestResp {
 		return framework.NewTestResp(fmt.Errorf("fail to update ds %s", daemonSetNameWithUser), updateResp.StatusCode)
 	}
 
-	time.Sleep(time.Minute)
-	ds := v1.DaemonSet{}
-	err = targetClient.Cache().Get(context.TODO(), types.NamespacedName{
-		Name:      daemonSetNameWithUser,
-		Namespace: framework.NamespaceName,
-	}, &ds)
-	framework.ExpectNoError(err)
 	podList := corev1.PodList{}
-	err = targetClient.Cache().List(context.TODO(), &podList, &client.ListOptions{
-		Namespace:     framework.NamespaceName,
-		LabelSelector: labels.Set{"kubecube.io/app": daemonSetNameWithUser}.AsSelector(),
+	ds := v1.DaemonSet{}
+	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		err = targetClient.Direct().Get(context.TODO(), types.NamespacedName{
+			Name:      daemonSetNameWithUser,
+			Namespace: framework.NamespaceName,
+		}, &ds)
+		if err != nil {
+			return false, err
+		}
+
+		err = targetClient.Direct().List(context.TODO(), &podList, &client.ListOptions{
+			Namespace:     framework.NamespaceName,
+			LabelSelector: labels.Set{"kubecube.io/app": daemonSetNameWithUser}.AsSelector(),
+		})
+		if err != nil {
+			return false, err
+		}
+		if len(podList.Items) == 0 {
+			return false, nil
+		}
+
+		pod := podList.Items[0]
+
+		// 修改容忍
+		tolerationCheck := false
+		for _, toleration := range pod.Spec.Tolerations {
+			if toleration.Key == "example-key" {
+				framework.ExpectEqual(toleration.Effect, corev1.TaintEffectNoExecute)
+				framework.ExpectEqual(toleration.Operator, corev1.TolerationOpEqual)
+				framework.ExpectEqual(toleration.Value, "example-value")
+				tolerationCheck = true
+				break
+			}
+		}
+
+		if !tolerationCheck {
+			return false, nil
+		}
+
+		var i int32
+		i = 10
+
+		// 修改配置
+		if ds.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable.IntVal != i || len(pod.Spec.Containers) != 1 ||
+			pod.Spec.Containers[0].Resources.Requests.Cpu().String() != "500m" || pod.Spec.Containers[0].Resources.Requests.Memory().String() != "512Mi" {
+			return false, nil
+		}
+
+		// 修改标签
+		labelCheck := false
+		if val, ok := pod.Labels["label1"]; ok {
+			if val == "label1" {
+				labelCheck = true
+			}
+		}
+		if !labelCheck {
+			return false, nil
+		}
+
+		// 修改注释
+		annotationCheck := false
+		if val, ok := pod.Annotations["annotation1"]; ok {
+			if val == "annotation1" {
+				annotationCheck = true
+			}
+		}
+		if !annotationCheck {
+			return false, nil
+		}
+
+		return true, nil
 	})
 	framework.ExpectNoError(err)
-	framework.ExpectNotEqual(len(podList.Items), 0)
-	pod := podList.Items[0]
 
-	ginkgo.By("修改部署策略")
-	tolerationCheck := false
-	for _, toleration := range pod.Spec.Tolerations {
-		if toleration.Key == "example-key" {
-			framework.ExpectEqual(toleration.Effect, corev1.TaintEffectNoExecute)
-			framework.ExpectEqual(toleration.Operator, corev1.TolerationOpEqual)
-			framework.ExpectEqual(toleration.Value, "example-value")
-			tolerationCheck = true
-			break
-		}
-	}
-	framework.ExpectEqual(tolerationCheck, true)
-
-	ginkgo.By("修改更新策略")
-	var i int32
-	i = 10
-	framework.ExpectEqual(ds.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable.IntVal, i)
-
-	ginkgo.By("修改配置")
-	framework.ExpectEqual(len(pod.Spec.Containers), 1)
-	framework.ExpectEqual(pod.Spec.Containers[0].Resources.Requests.Cpu().String(), "500m")
-	framework.ExpectEqual(pod.Spec.Containers[0].Resources.Requests.Memory().String(), "512Mi")
-
-	ginkgo.By("修改标签")
-	labelCheck := false
-	if val, ok := pod.Labels["label1"]; ok {
-		if val == "label1" {
-			labelCheck = true
-		}
-	}
-	framework.ExpectEqual(labelCheck, true)
-
-	ginkgo.By("修改注释")
-	annotationCheck := false
-	if val, ok := pod.Annotations["annotation1"]; ok {
-		if val == "annotation1" {
-			annotationCheck = true
-		}
-	}
-	framework.ExpectEqual(annotationCheck, true)
 	return framework.SucceedResp
 }
 
@@ -277,7 +314,6 @@ func deleteDs(user string) framework.TestResp {
 	}
 
 	framework.ExpectNoError(err)
-	time.Sleep(time.Minute)
 	return framework.SucceedResp
 }
 
