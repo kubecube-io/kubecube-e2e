@@ -22,16 +22,16 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 
-	"github.com/kubecube-io/kubecube/pkg/clog"
-	"github.com/kubecube-io/kubecube/pkg/multicluster/client"
 	v1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"net/http"
-	client2 "sigs.k8s.io/controller-runtime/pkg/client"
+	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
+	"github.com/kubecube-io/kubecube/pkg/clog"
+	"github.com/kubecube-io/kubecube/pkg/multicluster/client"
 )
 
 var (
@@ -76,7 +76,7 @@ func createCM(user string) framework.TestResp {
 	}
 
 	checkOfCreateCM := &v1.ConfigMap{}
-	err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+	err = cli.Direct().Get(context.Background(), ctrlclient.ObjectKey{
 		Namespace: namespace,
 		Name:      cmNameByUser,
 	}, checkOfCreateCM)
@@ -109,7 +109,7 @@ func createPodAndCheck(user string) framework.TestResp {
 
 	checkOfCreatePodWithCM := &v1.Pod{}
 	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
-		err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+		err = cli.Direct().Get(context.Background(), ctrlclient.ObjectKey{
 			Namespace: namespace,
 			Name:      podNameByUser,
 		}, checkOfCreatePodWithCM)
@@ -154,7 +154,7 @@ func updateConfigMap(user string) framework.TestResp {
 	}
 
 	checkOfUpdateCM := &v1.ConfigMap{}
-	err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+	err = cli.Direct().Get(context.Background(), ctrlclient.ObjectKey{
 		Namespace: namespace,
 		Name:      cmNameByUser,
 	}, checkOfUpdateCM)
@@ -184,7 +184,7 @@ func deleteConfigMap(user string) framework.TestResp {
 	}
 
 	checkOfDeleteCM := &v1.ConfigMap{}
-	err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+	err = cli.Direct().Get(context.Background(), ctrlclient.ObjectKey{
 		Namespace: namespace,
 		Name:      cmNameByUser,
 	}, checkOfDeleteCM)

@@ -249,7 +249,7 @@ func checkDsUpdate(user string) framework.TestResp {
 
 		pod := podList.Items[0]
 
-		// 修改容忍
+		// modify toleration
 		tolerationCheck := false
 		for _, toleration := range pod.Spec.Tolerations {
 			if toleration.Key == "example-key" {
@@ -268,13 +268,13 @@ func checkDsUpdate(user string) framework.TestResp {
 		var i int32
 		i = 10
 
-		// 修改配置
+		// modify config
 		if ds.Spec.UpdateStrategy.RollingUpdate.MaxUnavailable.IntVal != i || len(pod.Spec.Containers) != 1 ||
 			pod.Spec.Containers[0].Resources.Requests.Cpu().String() != "500m" || pod.Spec.Containers[0].Resources.Requests.Memory().String() != "512Mi" {
 			return false, nil
 		}
 
-		// 修改标签
+		// modify label
 		labelCheck := false
 		if val, ok := pod.Labels["label1"]; ok {
 			if val == "label1" {
@@ -285,7 +285,7 @@ func checkDsUpdate(user string) framework.TestResp {
 			return false, nil
 		}
 
-		// 修改注释
+		// modify anno
 		annotationCheck := false
 		if val, ok := pod.Annotations["annotation1"]; ok {
 			if val == "annotation1" {

@@ -29,8 +29,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
-
-	client2 "sigs.k8s.io/controller-runtime/pkg/client"
+	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var (
@@ -79,7 +78,7 @@ func createPVC1(user string) framework.TestResp {
 	}
 
 	checkOfCreatePVC := &v1.PersistentVolumeClaim{}
-	err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+	err = cli.Direct().Get(context.Background(), ctrlclient.ObjectKey{
 		Namespace: namespace,
 		Name:      pvc1NameWithUser,
 	}, checkOfCreatePVC)
@@ -105,7 +104,7 @@ func createPVC2(user string) framework.TestResp {
 	}
 
 	checkOfCreatePVC := &v1.PersistentVolumeClaim{}
-	err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+	err = cli.Direct().Get(context.Background(), ctrlclient.ObjectKey{
 		Namespace: namespace,
 		Name:      pvc2NameWithUser,
 	}, checkOfCreatePVC)
@@ -132,7 +131,7 @@ func createPod(user string) framework.TestResp {
 
 	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
 		checkOfCreatePVC := &v1.PersistentVolumeClaim{}
-		err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+		err = cli.Direct().Get(context.Background(), ctrlclient.ObjectKey{
 			Namespace: namespace,
 			Name:      pvc1NameWithUser,
 		}, checkOfCreatePVC)
@@ -148,7 +147,7 @@ func createPod(user string) framework.TestResp {
 
 	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
 		checkOfCreatePod := &v1.Pod{}
-		err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+		err = cli.Direct().Get(context.Background(), ctrlclient.ObjectKey{
 			Namespace: namespace,
 			Name:      podNameWithUser,
 		}, checkOfCreatePod)
@@ -161,7 +160,7 @@ func createPod(user string) framework.TestResp {
 	framework.ExpectNoError(err, "pod should be created")
 
 	checkOfPVList := &v1.PersistentVolumeList{}
-	err = cli.Direct().List(context.Background(), checkOfPVList, &client2.ListOptions{Namespace: namespace})
+	err = cli.Direct().List(context.Background(), checkOfPVList, &ctrlclient.ListOptions{Namespace: namespace})
 	for _, item := range checkOfPVList.Items {
 		if item.Spec.ClaimRef.Name == pvc1NameWithUser {
 			PV = checkOfPVList.Items[0].Name
@@ -188,7 +187,7 @@ func deletePod(user string) framework.TestResp {
 
 	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
 		checkOfDeletePod := &v1.Pod{}
-		err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+		err = cli.Direct().Get(context.Background(), ctrlclient.ObjectKey{
 			Namespace: namespace,
 			Name:      podNameWithUser,
 		}, checkOfDeletePod)
@@ -230,7 +229,7 @@ func deletePvc(user string) framework.TestResp {
 
 	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
 		checkOfDeletePVC := &v1.PersistentVolumeClaim{}
-		err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+		err = cli.Direct().Get(context.Background(), ctrlclient.ObjectKey{
 			Namespace: namespace,
 			Name:      pvc1NameWithUser,
 		}, checkOfDeletePVC)
@@ -243,7 +242,7 @@ func deletePvc(user string) framework.TestResp {
 
 	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
 		checkOfDeletePVC := &v1.PersistentVolumeClaim{}
-		err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+		err = cli.Direct().Get(context.Background(), ctrlclient.ObjectKey{
 			Namespace: namespace,
 			Name:      pvc2NameWithUser,
 		}, checkOfDeletePVC)
