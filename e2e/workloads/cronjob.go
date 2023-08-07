@@ -22,8 +22,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
+	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
 	"github.com/kubecube-io/kubecube/pkg/clog"
 	v1 "k8s.io/api/batch/v1"
 	"k8s.io/api/batch/v1beta1"
@@ -32,8 +32,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
 )
 
 func createCronjob(user string) framework.TestResp {
@@ -146,13 +144,20 @@ func updateCronjob(user string) framework.TestResp {
 	}
 
 	cronJob := v1beta1.CronJob{}
-	time.Sleep(time.Second * 20)
-	err = targetClient.Cache().Get(context.TODO(), types.NamespacedName{
-		Name:      cronJobNameWithUser,
-		Namespace: framework.NamespaceName,
-	}, &cronJob)
+	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		err = targetClient.Direct().Get(context.TODO(), types.NamespacedName{
+			Name:      cronJobNameWithUser,
+			Namespace: framework.NamespaceName,
+		}, &cronJob)
+		if err != nil {
+			return false, err
+		}
+		if cronJob.Spec.Schedule != "0 0 */1 * *" {
+			return false, nil
+		}
+		return true, nil
+	})
 	framework.ExpectNoError(err)
-	framework.ExpectEqual(cronJob.Spec.Schedule, "0 0 */1 * *")
 	return framework.SucceedResp
 }
 
@@ -223,7 +228,6 @@ func deleteCronjob(user string) framework.TestResp {
 		clog.Warn("res code %d", resp.StatusCode)
 		return framework.NewTestResp(fmt.Errorf("fail to delete cronjob %s", cronJobNameWithUser), resp.StatusCode)
 	}
-	time.Sleep(time.Minute)
 	return framework.SucceedResp
 }
 

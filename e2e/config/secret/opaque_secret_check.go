@@ -22,10 +22,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/kubecube-io/kubecube/pkg/clog"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	client2 "sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
@@ -75,14 +75,21 @@ func createPodWithSecretVolume(user string) framework.TestResp {
 		return framework.NewTestResp(fmt.Errorf("fail to create pod %s", podNameWithUser), respOfCreatePodWithSecret.StatusCode)
 	}
 
-	time.Sleep(time.Second * 30)
 	checkOfCreatePodWithSecret := &v1.Pod{}
-	err = cli.Direct().Get(context.Background(), client2.ObjectKey{
-		Namespace: namespace,
-		Name:      podNameWithUser,
-	}, checkOfCreatePodWithSecret)
+	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+			Namespace: namespace,
+			Name:      podNameWithUser,
+		}, checkOfCreatePodWithSecret)
+		if err != nil {
+			return false, err
+		}
+		if string(checkOfCreatePodWithSecret.Status.Phase) != "Running" {
+			return false, nil
+		}
+		return true, nil
+	})
 	framework.ExpectNoError(err, "pod should be created")
-	framework.ExpectEqual(string(checkOfCreatePodWithSecret.Status.Phase), "Running", "pod should be running")
 	return framework.SucceedResp
 }
 
@@ -104,14 +111,22 @@ func createPodWithSecretEnv(user string) framework.TestResp {
 		return framework.NewTestResp(fmt.Errorf("fail to create pod %s", podNameWithUser), respOfCreatePodWithSecretENV.StatusCode)
 	}
 
-	time.Sleep(time.Second * 30)
 	checkOfCreatePodWithSecretENV := &v1.Pod{}
-	err = cli.Direct().Get(context.Background(), client2.ObjectKey{
-		Namespace: namespace,
-		Name:      podNameWithUser,
-	}, checkOfCreatePodWithSecretENV)
+	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		err = cli.Direct().Get(context.Background(), client2.ObjectKey{
+			Namespace: namespace,
+			Name:      podNameWithUser,
+		}, checkOfCreatePodWithSecretENV)
+		if err != nil {
+			return false, err
+		}
+		if string(checkOfCreatePodWithSecretENV.Status.Phase) != "Running" {
+			return false, nil
+		}
+		return true, nil
+	})
+
 	framework.ExpectNoError(err, "pod should be created")
-	framework.ExpectEqual(string(checkOfCreatePodWithSecretENV.Status.Phase), "Running", "pod should be running")
 
 	return framework.SucceedResp
 }

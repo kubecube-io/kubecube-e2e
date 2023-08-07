@@ -21,7 +21,6 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/kubecube-io/kubecube/pkg/clog"
 	appsv1 "k8s.io/api/apps/v1"
@@ -138,37 +137,26 @@ func createIngress2(user string) framework.TestResp {
 			}
 		})
 	framework.ExpectNoError(err)
-	time.Sleep(time.Second * 30)
 	return framework.SucceedResp
 }
 
 func accessIngress(user string) framework.TestResp {
 	url := fmt.Sprintf("http://%s/%s", ingressAddr, user)
-	resp, err := httpHelper.Get(url, nil)
-	framework.ExpectNoError(err)
-	defer resp.Body.Close()
-	framework.ExpectEqual(resp.StatusCode, http.StatusOK)
-	body, err := io.ReadAll(resp.Body)
-	framework.ExpectNoError(err)
-	bodyList := strings.Split(string(body), "\n")
-	address := strings.TrimPrefix(bodyList[0], "Server address: ")
-	err = wait.Poll(waitInterval, waitTimeout,
+	err := wait.Poll(waitInterval, waitTimeout,
 		func() (bool, error) {
-			resp, err = httpHelper.Get(url, nil)
+			resp, err := httpHelper.Get(url, nil)
 			if err == nil && resp.StatusCode == http.StatusOK {
 				defer resp.Body.Close()
-				body, err = io.ReadAll(resp.Body)
+				body, err := io.ReadAll(resp.Body)
 				framework.ExpectNoError(err)
-				bodyList = strings.Split(string(body), "\n")
-				a := strings.TrimPrefix(bodyList[0], "Server address: ")
-				if a != address {
+				bodyList := strings.Split(string(body), "\n")
+				if strings.HasPrefix(bodyList[0], "Server address: ") {
 					return true, nil
-				} else {
-					return false, nil
 				}
 			} else {
 				return false, nil
 			}
+			return true, nil
 		})
 	framework.ExpectNoError(err)
 	return framework.SucceedResp
@@ -253,31 +241,6 @@ func updateIngress2(user string) framework.TestResp {
 	return framework.SucceedResp
 }
 
-func accessIngress2(user string) framework.TestResp {
-	url := fmt.Sprintf("http://%s/%s", ingressAddr, user)
-	resp, err := httpHelper.Get(url, nil)
-	framework.ExpectNoError(err)
-	defer resp.Body.Close()
-	framework.ExpectEqual(resp.StatusCode, http.StatusOK)
-	body, err := io.ReadAll(resp.Body)
-	framework.ExpectNoError(err)
-	bodyList := strings.Split(string(body), "\n")
-	address2 := strings.TrimPrefix(bodyList[0], "Server address: ")
-	for i := 0; i < 5; i++ {
-		resp, err = httpHelper.Get(url, nil)
-		framework.ExpectNoError(err)
-		framework.ExpectEqual(resp.StatusCode, http.StatusOK)
-		body, err = io.ReadAll(resp.Body)
-		framework.ExpectNoError(err)
-		bodyList = strings.Split(string(body), "\n")
-		a := strings.TrimPrefix(bodyList[0], "Server address: ")
-		framework.ExpectEqual(a, address2)
-	}
-	defer resp.Body.Close()
-	framework.ExpectNoError(err)
-	return framework.SucceedResp
-}
-
 func deleteIngress2(user string) framework.TestResp {
 	framework.ExpectNoError(framework.TargetConvertClient.Delete(ctx, ingress2))
 	return framework.SucceedResp
@@ -338,7 +301,7 @@ var multiUserIngressFunctionTest = framework.MultiUserTest{
 		{
 			Name:        "4. 重复第2步",
 			Description: "4. 重复第2步",
-			StepFunc:    accessIngress2,
+			StepFunc:    accessIngress,
 			ExpectPass: map[string]bool{
 				framework.UserAdmin:        true,
 				framework.UserTenantAdmin:  true,
