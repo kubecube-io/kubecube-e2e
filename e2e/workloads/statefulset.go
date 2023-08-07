@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/kubecube-io/kubecube/pkg/clog"
 	"github.com/onsi/ginkgo"
@@ -57,7 +56,6 @@ func createStatefulsetWithPvc(user string) framework.TestResp {
 		return framework.NewTestResp(fmt.Errorf("fail to create statefulset %s", stsNameWithUser), resp.StatusCode)
 	}
 
-	time.Sleep(time.Second * 20)
 	return framework.SucceedResp
 }
 
@@ -81,7 +79,6 @@ func createStatefulsetWithoutPvc(user string) framework.TestResp {
 		clog.Warn("res code %d", resp.StatusCode)
 		return framework.NewTestResp(fmt.Errorf("fail to create statefulset %s", stsNameWithUser), resp.StatusCode)
 	}
-	time.Sleep(time.Second * 20)
 	return framework.SucceedResp
 }
 
@@ -103,65 +100,100 @@ func checkStatefulsetVolume(user string) framework.TestResp {
 	}
 
 	sts := v1.StatefulSet{}
-	err := targetClient.Cache().Get(context.TODO(), types.NamespacedName{
-		Name:      stsNameWithUser,
-		Namespace: framework.NamespaceName,
-	}, &sts)
-	framework.ExpectNoError(err)
-	framework.ExpectEqual(len(sts.Spec.Template.Spec.Containers), 1)
-	container := sts.Spec.Template.Spec.Containers[0]
-	volumeCheck := false
-	for _, volumeMount := range container.VolumeMounts {
-		if volumeMount.Name == "pv1" {
-			framework.ExpectEqual(volumeMount.MountPath, "/mnt1")
-			volumeCheck = true
-			break
+	err := wait.Poll(framework.WaitTimeout, framework.WaitInterval, func() (done bool, err error) {
+		err = targetClient.Direct().Get(context.TODO(), types.NamespacedName{
+			Name:      stsNameWithUser,
+			Namespace: framework.NamespaceName,
+		}, &sts)
+		if err != nil {
+			return false, err
 		}
-	}
-	framework.ExpectEqual(volumeCheck, true)
+		if len(sts.Spec.Template.Spec.Containers) != 1 {
+			return false, nil
+		}
+		container := sts.Spec.Template.Spec.Containers[0]
+		volumeCheck := false
+		for _, volumeMount := range container.VolumeMounts {
+			if volumeMount.Name == "pv1" {
+				if volumeMount.MountPath != "/mnt1" {
+					return false, err
+				}
+				volumeCheck = true
+				break
+			}
+		}
+		if !volumeCheck {
+			return false, nil
+		}
+		return true, nil
+	})
+	framework.ExpectNoError(err)
 	return framework.SucceedResp
 }
 
 func checkStatefulsetRunning(user string) framework.TestResp {
-	podList := corev1.PodList{}
-	err := targetClient.Cache().List(context.TODO(), &podList, &client.ListOptions{
-		Namespace:     framework.NamespaceName,
-		LabelSelector: labels.Set{"kubecube.io/app": stsNameWithUser}.AsSelector(),
+	err := wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		podList := corev1.PodList{}
+		err = targetClient.Direct().List(context.TODO(), &podList, &client.ListOptions{
+			Namespace:     framework.NamespaceName,
+			LabelSelector: labels.Set{"kubecube.io/app": stsNameWithUser}.AsSelector(),
+		})
+		if err != nil {
+			return false, err
+		}
+		if len(podList.Items) != 2 {
+			return false, nil
+		}
+		pod1Check := false
+		pod2Check := false
+		for _, pod := range podList.Items {
+			if pod.Name == stsNameWithUser+"-0" {
+				if pod.Status.Phase != corev1.PodRunning || pod.Status.HostIP != framework.NodeHostIp {
+					clog.Info("[DEBUG] pod %v not running, status: %v", pod.Name, pod.Status)
+					return false, nil
+				}
+				pod1Check = true
+			}
+			if pod.Name == stsNameWithUser+"-1" {
+				if pod.Status.Phase != corev1.PodRunning || pod.Status.HostIP != framework.NodeHostIp {
+					clog.Info("[DEBUG] pod %v not running, status: %v", pod.Name, pod.Status)
+					return false, nil
+				}
+				pod2Check = true
+			}
+		}
+		if !pod1Check || !pod2Check {
+			return false, nil
+		}
+		return true, nil
 	})
 	framework.ExpectNoError(err)
-	framework.ExpectEqual(len(podList.Items), 2)
-	pod1Check := false
-	pod2Check := false
-	for _, pod := range podList.Items {
-		if pod.Name == stsNameWithUser+"-0" {
-			framework.ExpectEqual(pod.Status.Phase, corev1.PodRunning)
-			framework.ExpectEqual(pod.Status.HostIP, framework.NodeHostIp)
-			pod1Check = true
-		}
-		if pod.Name == stsNameWithUser+"-1" {
-			framework.ExpectEqual(pod.Status.Phase, corev1.PodRunning)
-			framework.ExpectEqual(pod.Status.HostIP, framework.NodeHostIp)
-			pod2Check = true
-		}
-	}
-	framework.ExpectEqual(pod1Check, true)
-	framework.ExpectEqual(pod2Check, true)
 	return framework.SucceedResp
 }
 
 func checkStatefulsetDetail(user string) framework.TestResp {
 	podList := corev1.PodList{}
-	err := targetClient.Cache().List(context.TODO(), &podList, &client.ListOptions{
-		Namespace:     framework.NamespaceName,
-		LabelSelector: labels.Set{"kubecube.io/app": stsNameWithUser}.AsSelector(),
+	err := wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		err = targetClient.Direct().List(context.TODO(), &podList, &client.ListOptions{
+			Namespace:     framework.NamespaceName,
+			LabelSelector: labels.Set{"kubecube.io/app": stsNameWithUser}.AsSelector(),
+		})
+		if err != nil {
+			return false, err
+		}
+		if len(podList.Items) != 2 {
+			return false, nil
+		}
+
+		return true, nil
 	})
-	framework.ExpectNoError(err)
-	framework.ExpectEqual(len(podList.Items), 2)
+
 	pod := podList.Items[0]
 	framework.ExpectEqual(len(pod.Spec.Containers), 1)
 	container := pod.Spec.Containers[0]
 	framework.ExpectEqual(container.Name, stsNameWithUser)
 	framework.ExpectEqual(container.Image, framework.TestImage)
+
 	ginkgo.By("查看容器日志")
 	url := BuildLogUrl(framework.KubecubeHost, framework.TargetClusterName, framework.NamespaceName, pod.Name, container.Name)
 	logResp, err := httpHelper.RequestByUser(http.MethodGet, url, "", user, nil)
@@ -188,15 +220,24 @@ func checkStatefulsetPerformance(user string) framework.TestResp {
 }
 
 func checkStatefulsetCondition(user string) framework.TestResp {
-	podList := corev1.PodList{}
-	err := targetClient.Cache().List(context.TODO(), &podList, &client.ListOptions{
-		Namespace:     framework.NamespaceName,
-		LabelSelector: labels.Set{"kubecube.io/app": stsNameWithUser}.AsSelector(),
+	err := wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		podList := corev1.PodList{}
+		err = targetClient.Direct().List(context.TODO(), &podList, &client.ListOptions{
+			Namespace:     framework.NamespaceName,
+			LabelSelector: labels.Set{"kubecube.io/app": stsNameWithUser}.AsSelector(),
+		})
+		if err != nil {
+			return false, err
+		}
+		if len(podList.Items) != 2 {
+			return false, nil
+		}
+		pod := podList.Items[0]
+		framework.ExpectNotEqual(len(pod.Status.Conditions), 0)
+		return true, nil
 	})
 	framework.ExpectNoError(err)
-	framework.ExpectEqual(len(podList.Items), 2)
-	pod := podList.Items[0]
-	framework.ExpectNotEqual(len(pod.Status.Conditions), 0)
+
 	return framework.SucceedResp
 }
 
@@ -228,12 +269,21 @@ func checkStatefulsetEvents(user string) framework.TestResp {
 
 func checkStatefulsetPodEvents(user string) framework.TestResp {
 	podList := corev1.PodList{}
-	err := targetClient.Cache().List(context.TODO(), &podList, &client.ListOptions{
-		Namespace:     framework.NamespaceName,
-		LabelSelector: labels.Set{"kubecube.io/app": stsNameWithUser}.AsSelector(),
+	err := wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		err = targetClient.Direct().List(context.TODO(), &podList, &client.ListOptions{
+			Namespace:     framework.NamespaceName,
+			LabelSelector: labels.Set{"kubecube.io/app": stsNameWithUser}.AsSelector(),
+		})
+		if err != nil {
+			return false, err
+		}
+		if len(podList.Items) != 2 {
+			return false, nil
+		}
+		return true, nil
 	})
 	framework.ExpectNoError(err)
-	framework.ExpectEqual(len(podList.Items), 2)
+
 	pod := podList.Items[0]
 	url := BuildEventUrl(framework.KubecubeHost, framework.TargetClusterName, framework.NamespaceName, string(pod.UID))
 	resp, err := httpHelper.Get(url, nil)
@@ -379,7 +429,6 @@ func deleteStatefulset(user string) framework.TestResp {
 		}
 	}
 
-	time.Sleep(time.Minute)
 	return framework.SucceedResp
 }
 

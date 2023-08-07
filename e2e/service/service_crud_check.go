@@ -29,6 +29,7 @@ import (
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
@@ -250,8 +251,14 @@ func deleteService(user string) framework.TestResp {
 	// check return success
 	framework.ExpectEqual(resp.StatusCode, http.StatusOK)
 	service := v13.Service{}
-	err = framework.TargetClusterClient.Direct().Get(ctx, types.NamespacedName{Name: service2NameWithUser, Namespace: framework.NamespaceName}, &service)
-	framework.ExpectEqual(true, kerrors.IsNotFound(err))
+	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		err = framework.TargetClusterClient.Direct().Get(ctx, types.NamespacedName{Name: service2NameWithUser, Namespace: framework.NamespaceName}, &service)
+		if !kerrors.IsNotFound(err) {
+			return false, err
+		}
+		return true, nil
+	})
+	framework.ExpectNoError(err)
 
 	url = "/api/v1/cube/proxy/clusters/" + framework.TargetClusterName + "/api/v1/namespaces/" + framework.NamespaceName + "/services/" + service1NameWithUser
 	resp, err = httpHelper.RequestByUser(http.MethodDelete, framework.KubecubeHost+url, "", user, nil)
@@ -265,16 +272,23 @@ func deleteService(user string) framework.TestResp {
 
 	// check return success
 	serviceList := v13.ServiceList{}
-	err = framework.TargetClusterClient.Direct().List(ctx, &serviceList, &client.ListOptions{Namespace: framework.NamespaceName})
-	framework.ExpectNoError(err)
-
-	count := 0
-	for _, item := range serviceList.Items {
-		if item.Name == service1NameWithUser || item.Name == service2NameWithUser {
-			count++
+	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		err = framework.TargetClusterClient.Direct().List(ctx, &serviceList, &client.ListOptions{Namespace: framework.NamespaceName})
+		if err != nil {
+			return false, err
 		}
-	}
-	framework.ExpectEqual(count, 0)
+		count := 0
+		for _, item := range serviceList.Items {
+			if item.Name == service1NameWithUser || item.Name == service2NameWithUser {
+				count++
+			}
+		}
+		if count != 0 {
+			return false, nil
+		}
+		return true, nil
+	})
+	framework.ExpectNoError(err)
 
 	return framework.SucceedResp
 }

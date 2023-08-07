@@ -24,7 +24,6 @@ import (
 	"net/http"
 
 	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
-	"github.com/kubecube-io/kubecube/pkg/clog"
 	"github.com/kubecube-io/kubecube/pkg/multicluster/client"
 
 	v1 "k8s.io/api/core/v1"
@@ -80,7 +79,6 @@ func listNode(user string) framework.TestResp {
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	framework.ExpectNoError(err)
-	clog.Info("get node list resp, data: %s", string(body))
 	var nodeResMap map[string]interface{}
 	err = json.Unmarshal(body, &nodeResMap)
 	framework.ExpectNoError(err)

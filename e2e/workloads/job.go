@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 
 	"github.com/kubecube-io/kubecube/pkg/clog"
 	"github.com/onsi/ginkgo"
@@ -30,6 +29,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
@@ -53,13 +53,12 @@ func createJob(user string) framework.TestResp {
 		return framework.NewTestResp(fmt.Errorf("fail to create job %s", jobNameWithUser), jobResp.StatusCode)
 	}
 
-	time.Sleep(time.Second * 10)
 	return framework.SucceedResp
 }
 
 func checkJob(user string) framework.TestResp {
 	job := v1.Job{}
-	err := targetClient.Cache().Get(context.TODO(), types.NamespacedName{
+	err := targetClient.Direct().Get(context.TODO(), types.NamespacedName{
 		Name:      jobNameWithUser,
 		Namespace: framework.NamespaceName,
 	}, &job)
@@ -69,22 +68,37 @@ func checkJob(user string) framework.TestResp {
 }
 
 func checkJobList(user string) framework.TestResp {
-	jobList := v1.JobList{}
-	err := targetClient.Cache().List(context.TODO(), &jobList, &client.ListOptions{
-		Namespace:     framework.NamespaceName,
-		LabelSelector: labels.Set{"kubecube.io/app": jobNameWithUser}.AsSelector(),
+	err := wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		jobList := v1.JobList{}
+		err = targetClient.Direct().List(context.TODO(), &jobList, &client.ListOptions{
+			Namespace:     framework.NamespaceName,
+			LabelSelector: labels.Set{"kubecube.io/app": jobNameWithUser}.AsSelector(),
+		})
+		if err != nil {
+			return false, err
+		}
+		if len(jobList.Items) != 1 {
+			return false, nil
+		}
+		job := jobList.Items[0]
+		framework.ExpectEqual(job.Name, jobNameWithUser)
+		if len(job.Status.Conditions) == 0 {
+			return false, nil
+		}
+		if job.Status.Conditions[0].Type != v1.JobComplete {
+			return false, nil
+		}
+		return true, nil
 	})
+
 	framework.ExpectNoError(err)
-	framework.ExpectEqual(len(jobList.Items), 1)
-	job := jobList.Items[0]
-	framework.ExpectEqual(job.Name, jobNameWithUser)
-	framework.ExpectEqual(job.Status.Conditions[0].Type, v1.JobComplete)
+
 	return framework.SucceedResp
 }
 
 func checkJobInfo(user string) framework.TestResp {
 	podList := corev1.PodList{}
-	err := targetClient.Cache().List(context.TODO(), &podList, &client.ListOptions{
+	err := targetClient.Direct().List(context.TODO(), &podList, &client.ListOptions{
 		Namespace:     framework.NamespaceName,
 		LabelSelector: labels.Set{"kubecube.io/app": jobNameWithUser}.AsSelector(),
 	})
@@ -101,7 +115,7 @@ func checkJobInfo(user string) framework.TestResp {
 
 func checkJobDetail(user string) framework.TestResp {
 	podList := corev1.PodList{}
-	err := targetClient.Cache().List(context.TODO(), &podList, &client.ListOptions{
+	err := targetClient.Direct().List(context.TODO(), &podList, &client.ListOptions{
 		Namespace:     framework.NamespaceName,
 		LabelSelector: labels.Set{"kubecube.io/app": jobNameWithUser}.AsSelector(),
 	})
@@ -134,22 +148,41 @@ func checkJobPerformance(user string) framework.TestResp {
 }
 
 func checkJobCondition(user string) framework.TestResp {
-	job := v1.Job{}
-	err := targetClient.Cache().Get(context.TODO(), types.NamespacedName{
-		Name:      jobNameWithUser,
-		Namespace: framework.NamespaceName,
-	}, &job)
-	framework.ExpectNoError(err)
-	framework.ExpectNotEqual(len(job.Status.Conditions), 0)
-	podList := corev1.PodList{}
-	err = targetClient.Cache().List(context.TODO(), &podList, &client.ListOptions{
-		Namespace:     framework.NamespaceName,
-		LabelSelector: labels.Set{"kubecube.io/app": jobNameWithUser}.AsSelector(),
+	err := wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		job := v1.Job{}
+		err = targetClient.Direct().Get(context.TODO(), types.NamespacedName{
+			Name:      jobNameWithUser,
+			Namespace: framework.NamespaceName,
+		}, &job)
+		if err != nil {
+			return false, err
+		}
+		if len(job.Status.Conditions) == 0 {
+			return false, nil
+		}
+		return true, nil
 	})
 	framework.ExpectNoError(err)
-	framework.ExpectEqual(len(podList.Items), 1)
-	pod := podList.Items[0]
-	framework.ExpectNotEqual(len(pod.Status.Conditions), 0)
+
+	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
+		podList := corev1.PodList{}
+		err = targetClient.Direct().List(context.TODO(), &podList, &client.ListOptions{
+			Namespace:     framework.NamespaceName,
+			LabelSelector: labels.Set{"kubecube.io/app": jobNameWithUser}.AsSelector(),
+		})
+		if err != nil {
+			return false, err
+		}
+		if len(podList.Items) != 1 {
+			return false, nil
+		}
+		pod := podList.Items[0]
+		if len(pod.Status.Conditions) == 0 {
+			return false, nil
+		}
+		return true, nil
+	})
+	framework.ExpectNoError(err)
 	return framework.SucceedResp
 }
 
@@ -217,7 +250,6 @@ func deleteJob(user string) framework.TestResp {
 		return framework.NewTestResp(fmt.Errorf("fail to delete job %s", jobNameWithUser), resp.StatusCode)
 	}
 
-	time.Sleep(time.Minute)
 	return framework.SucceedResp
 }
 
