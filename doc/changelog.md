@@ -1,13 +1,19 @@
+# V1.0.7
+
+2023-08-08
+
+## Feature
+- reduce execute time [#12](https://github.com/kubecube-io/kubecube-e2e/pull/12)
+
 # V1.0.6
 
 2023-07-24
 
 ## Bugfix
 - fix test bug
-  - fix service event test
-  - fix ingress crud test
-  - fix crd test  
-  [#11](https://github.com/kubecube-io/kubecube-e2e/pull/11)
+- fix service event test
+- fix ingress crud test
+- fix crd test [#11](https://github.com/kubecube-io/kubecube-e2e/pull/11)
 
 ## Dependencies
 
