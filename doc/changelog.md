@@ -2,8 +2,16 @@
 
 2023-08-08
 
-## Feature
+## Optimize
 - reduce execute time [#12](https://github.com/kubecube-io/kubecube-e2e/pull/12)
+
+## Dependencies
+
+- kubecube 1.8.0
+- ginkgo 1.16.5
+- gomega 1.19.0
+- k8s 1.20.6
+- viper 1.11.0
 
 # V1.0.6
 
@@ -16,7 +24,6 @@
 - fix crd test [#11](https://github.com/kubecube-io/kubecube-e2e/pull/11)
 
 ## Dependencies
-
 
 - kubecube 1.8.0
 - ginkgo 1.16.5
