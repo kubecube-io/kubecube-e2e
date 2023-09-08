@@ -118,7 +118,10 @@ func (m *SyncMgr) Start(ctx context.Context) error {
 			return err
 		}
 		if err = m.ReconcileCluster(key); err != nil {
-			return err
+			// ignore cluster init error and keep retry background.
+			// discarded cluster should be cleaned up manually.
+			clog.Warn("reconcile cluster %v failed %v", key, err)
+			continue
 		}
 	}
 
@@ -172,7 +175,7 @@ func (m *SyncMgr) ReconcileCluster(key worker.QueueKey) error {
 	if err != nil {
 		// delete internal cluster if cluster was deleted
 		if errors.IsNotFound(err) {
-			err = ManagerImpl.Del(cluster.Name)
+			err = ManagerImpl.Del(ckey.Name)
 			if err != nil {
 				clog.Warn(err.Error())
 			}

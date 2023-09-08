@@ -55,7 +55,7 @@ func createCronjob(user string) framework.TestResp {
 	cronJob := v1beta1.CronJob{}
 	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout,
 		func() (bool, error) {
-			err := targetClient.Cache().Get(context.TODO(), types.NamespacedName{
+			err := framework.TargetConvertClient.Get(context.TODO(), types.NamespacedName{
 				Name:      cronJobNameWithUser,
 				Namespace: framework.NamespaceName,
 			}, &cronJob)
@@ -73,7 +73,7 @@ func checkCronjobCreate(user string) framework.TestResp {
 	cronJob := v1beta1.CronJob{}
 	err := wait.Poll(framework.WaitInterval, framework.WaitTimeout,
 		func() (bool, error) {
-			err := targetClient.Cache().Get(context.TODO(), types.NamespacedName{
+			err := framework.TargetConvertClient.Get(context.TODO(), types.NamespacedName{
 				Name:      cronJobNameWithUser,
 				Namespace: framework.NamespaceName,
 			}, &cronJob)
@@ -92,7 +92,7 @@ func checkCronjobInfo(user string) framework.TestResp {
 	cronJob := v1beta1.CronJob{}
 	err := wait.Poll(framework.WaitInterval, framework.WaitTimeout,
 		func() (bool, error) {
-			err := targetClient.Cache().Get(context.TODO(), types.NamespacedName{
+			err := framework.TargetConvertClient.Get(context.TODO(), types.NamespacedName{
 				Name:      cronJobNameWithUser,
 				Namespace: framework.NamespaceName,
 			}, &cronJob)
@@ -145,7 +145,7 @@ func updateCronjob(user string) framework.TestResp {
 
 	cronJob := v1beta1.CronJob{}
 	err = wait.Poll(framework.WaitInterval, framework.WaitTimeout, func() (done bool, err error) {
-		err = targetClient.Direct().Get(context.TODO(), types.NamespacedName{
+		err = framework.TargetConvertClient.Get(context.TODO(), types.NamespacedName{
 			Name:      cronJobNameWithUser,
 			Namespace: framework.NamespaceName,
 		}, &cronJob)
@@ -165,7 +165,7 @@ func checkUpdatedCronjob(user string) framework.TestResp {
 	cronJob := v1beta1.CronJob{}
 	err := wait.Poll(framework.WaitInterval, framework.WaitTimeout,
 		func() (bool, error) {
-			err := targetClient.Cache().Get(context.TODO(), types.NamespacedName{
+			err := framework.TargetConvertClient.Get(context.TODO(), types.NamespacedName{
 				Name:      cronJobNameWithUser,
 				Namespace: framework.NamespaceName,
 			}, &cronJob)
@@ -189,7 +189,7 @@ func checkUpdatedCronjobStatus(user string) framework.TestResp {
 	cronJob := v1beta1.CronJob{}
 	err := wait.Poll(framework.WaitInterval, framework.WaitTimeout,
 		func() (bool, error) {
-			err := targetClient.Cache().Get(context.TODO(), types.NamespacedName{
+			err := framework.TargetConvertClient.Get(context.TODO(), types.NamespacedName{
 				Name:      cronJobNameWithUser,
 				Namespace: framework.NamespaceName,
 			}, &cronJob)
