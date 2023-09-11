@@ -101,44 +101,11 @@ func initializeResources() error {
 		return err
 	}
 
-	// 4.检查是否完成租户项目的创建
-	clog.Info("[Before] check sync of tenant and project completed")
 	waitInterval := framework.WaitInterval
 	waitTimeout := framework.WaitTimeout
 	cli := framework.TargetClusterClient
-	// 等待租户创建完成，则会存在一个租户关联的命名空间
-	err = wait.Poll(waitInterval, waitTimeout,
-		func() (bool, error) {
-			var namespace corev1.Namespace
-			errInfo := cli.Direct().Get(ctx, types.NamespacedName{Name: "kubecube-tenant-" + framework.TenantName}, &namespace)
-			if errInfo != nil {
-				return false, nil
-			} else {
-				return true, nil
-			}
-		})
-	if err != nil {
-		clog.Error("[Before] e2e init fail, can not find tenant namespace in %s, %v", framework.TargetClusterName, err)
-		return err
-	}
 
-	// 等待项目创建完成，则会存在一个项目关联的命名空间
-	err = wait.Poll(waitInterval, waitTimeout,
-		func() (bool, error) {
-			var namespace corev1.Namespace
-			errInfo := cli.Direct().Get(ctx, types.NamespacedName{Name: "kubecube-project-" + framework.ProjectName}, &namespace)
-			if errInfo != nil {
-				return false, nil
-			} else {
-				return true, nil
-			}
-		})
-	if err != nil {
-		clog.Error("[Before] e2e init fail, can not find project namespace in %s, %v", framework.TargetClusterName, err)
-		return err
-	}
-
-	// 5.绑定角色
+	// 4.绑定角色
 	// user1-租户管理员
 	err = createTenantAdminRoleBindings(framework.TenantAdmin, framework.TenantName)
 	if err != nil {
