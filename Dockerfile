@@ -1,5 +1,5 @@
 # Build the manager binary
-FROM golang:1.17 as builder
+FROM golang:1.20.7-alpine3.18 as builder
 
 WORKDIR /workspace
 
@@ -11,11 +11,11 @@ COPY vendor/ vendor/
 COPY Makefile Makefile
 
 # Build
-RUN make build
+RUN CGO_ENABLED=0 GOOS=linux GO111MODULE=on go test -mod=vendor -c -o cube.test ./e2e
 
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
-FROM alpine:3.13.4
+FROM alpine:3.18
 WORKDIR /workspace
 ENV TZ Asia/Shanghai
 COPY --from=builder /workspace/cube.test .
