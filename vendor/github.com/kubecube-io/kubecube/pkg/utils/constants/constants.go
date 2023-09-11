@@ -83,6 +83,13 @@ const (
 	ProjectAdminCluster = "project-admin-cluster"
 	ReviewerCluster     = "reviewer-cluster"
 
+	AggPlatformAdmin       = "aggregate-to-platform-admin"
+	AggReviewer            = "aggregate-to-reviewer"
+	AggProjectAdminCluster = "aggregate-to-project-admin-cluster"
+	AggTenantAdminCluster  = "aggregate-to-tenant-admin-cluster"
+	AggProjectAdmin        = "aggregate-to-project-admin"
+	AggTenantAdmin         = "aggregate-to-tenant-admin"
+
 	PlatformAdminAgLabel = "rbac.authorization.k8s.io/aggregate-to-platform-admin"
 	TenantAdminAgLabel   = "rbac.authorization.k8s.io/aggregate-to-tenant-admin"
 	ProjectAdminAgLabel  = "rbac.authorization.k8s.io/aggregate-to-project-admin"
@@ -178,6 +185,12 @@ const (
 	DeleteVerb = "delete"
 	// ListVerb list resource
 	ListVerb = "list"
+	// DeleteCollectionVerb deletecollection resource
+	DeleteCollectionVerb = "deletecollection"
+	// PatchVerb patch resource
+	PatchVerb
+	// WatchVerb watch resource
+	WatchVerb = "watch"
 )
 
 // rbac binding subjects
@@ -209,5 +222,24 @@ const (
 
 const (
 	// AuthMappingCM auth configmap name
-	AuthMappingCM = "kubecube-auth-mapping"
+	AuthMappingCM         = "kubecube-auth-mapping"
+	AuthPlatformMappingCM = "kubecube-auth-platform-mapping"
+)
+
+const (
+	ClusterRolePlatform = "platform"
+	ClusterRoleTenant   = "tenant"
+	ClusterRoleProject  = "project"
+)
+
+// node gpu keys
+const (
+	GpuNvidia = "nvidia.com/gpu"
+)
+
+const (
+	CompletedPodStatus   = "Completed"
+	NotReadyPodStatus    = "NotReady"
+	UnknownPodStatus     = "Unknown"
+	TerminatingPodStatus = "Terminating"
 )
