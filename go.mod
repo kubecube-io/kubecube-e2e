@@ -14,7 +14,6 @@ require (
 	k8s.io/apiextensions-apiserver v0.27.2
 	k8s.io/apimachinery v0.27.4
 	sigs.k8s.io/controller-runtime v0.11.0
-	sigs.k8s.io/hierarchical-namespaces v1.0.0
 )
 
 require (
@@ -28,6 +27,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	sigs.k8s.io/hierarchical-namespaces v1.0.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 )
 

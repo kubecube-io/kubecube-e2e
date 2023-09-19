@@ -18,10 +18,12 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/kubecube-io/kubecube/pkg/utils/constants"
 
+	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
 	quotav1 "github.com/kubecube-io/kubecube/pkg/apis/quota/v1"
 	v1 "github.com/kubecube-io/kubecube/pkg/apis/quota/v1"
 	tenantv1 "github.com/kubecube-io/kubecube/pkg/apis/tenant/v1"
@@ -32,9 +34,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"sigs.k8s.io/hierarchical-namespaces/api/v1alpha2"
-
-	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
 )
 
 // initializeResources 执行 e2e 测试的前置资源创建
@@ -160,32 +159,29 @@ func initializeResources() error {
 
 	// 7.目标集群会创建一个测试用命名空间
 	clog.Info("[Before] create namespace %v in cluster %v", framework.NamespaceName, framework.TargetClusterName)
-	subNs := &v1alpha2.SubnamespaceAnchor{
+	subNs := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      framework.NamespaceName,
-			Namespace: "kubecube-project-" + framework.ProjectName,
+			Name: framework.NamespaceName,
 			Labels: map[string]string{
-				constants.TenantLabel:  framework.TenantName,
-				constants.ProjectLabel: framework.ProjectName,
+				constants.TenantLabel:        framework.TenantName,
+				constants.ProjectLabel:       framework.ProjectName,
+				constants.HncIncludedNsLabel: "true",
+				fmt.Sprintf("%v%v.tree.hnc.x-k8s.io/depth", constants.ProjectNsPrefix, framework.ProjectName): "1",
+				fmt.Sprintf("%v%v.tree.hnc.x-k8s.io/depth", constants.TenantNsPrefix, framework.TenantName):   "2",
+				fmt.Sprintf("%v.tree.hnc.x-k8s.io/depth", framework.NamespaceName):                            "0",
+				"node.kubecube.io/ns": "share",
+				"system/namespace":    "netease.share",
+				fmt.Sprintf("system/project-%v", framework.ProjectName): "true",
+				"system/tenant": framework.TenantName,
+			},
+			Annotations: map[string]string{
+				constants.HncAnnotation:      constants.ProjectNsPrefix + framework.ProjectName,
+				constants.HncIncludedNsLabel: "true",
 			},
 		},
 	}
 	if err := cli.Direct().Create(ctx, subNs); err != nil && !errors.IsAlreadyExists(err) {
-		clog.Info("[Before] e2e init fail, can not create e2e subnamespace in %s, %v", framework.TargetClusterName, err)
-		return err
-	}
-	err = wait.Poll(waitInterval, waitTimeout,
-		func() (bool, error) {
-			var namespace corev1.Namespace
-			errInfo := cli.Direct().Get(ctx, types.NamespacedName{Name: framework.NamespaceName}, &namespace)
-			if errInfo != nil {
-				return false, nil
-			} else {
-				return true, nil
-			}
-		})
-	if err != nil {
-		clog.Info("[Before] e2e init fail, can not find e2e namespace in %s, %v", framework.TargetClusterName, err)
+		clog.Debug("[Before] e2e init fail, can not create e2e namespace in %s, %v", framework.TargetClusterName, err)
 		return err
 	}
 
@@ -270,29 +266,12 @@ func clearResources() error {
 
 	// 1.删除空间
 	clog.Info("[After] delete e2e namespace %v", framework.NamespaceName)
-	sns := v1alpha2.SubnamespaceAnchor{}
-	sns.Namespace = projectNamespace
+	sns := corev1.Namespace{}
 	sns.Name = framework.NamespaceName
 	err := targetCli.Direct().Delete(ctx, &sns)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			clog.Info("[After] delete e2e namespace fail, %v", err)
-			return err
-		}
-	} else {
-		if err = wait.Poll(waitInterval, waitTimeout,
-			func() (bool, error) {
-				var nsTemp corev1.Namespace
-				err := targetCli.Direct().Get(ctx, types.NamespacedName{Name: framework.NamespaceName}, &nsTemp)
-				if err != nil {
-					if errors.IsNotFound(err) {
-						return true, nil
-					}
-					return false, nil
-				}
-				return false, nil
-			}); err != nil {
-			clog.Info("[After] delete e2e namespace timeout, %v", err)
+			clog.Debug("[After] delete e2e namespace fail, %v", err)
 			return err
 		}
 	}
@@ -314,32 +293,6 @@ func clearResources() error {
 
 	// 3.删除项目
 	clog.Info("[After] delete project %v", framework.ProjectName)
-	pns := v1alpha2.SubnamespaceAnchor{}
-	pns.Namespace = tenantNamespace
-	pns.Name = projectNamespace
-	err = pivotCli.Direct().Delete(ctx, &pns)
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			clog.Error("[After] delete project namespace fail, %v", err)
-		}
-	} else {
-		if err = wait.Poll(waitInterval, waitTimeout,
-			func() (bool, error) {
-				var nsTemp corev1.Namespace
-				err := pivotCli.Direct().Get(ctx, types.NamespacedName{Name: projectNamespace}, &nsTemp)
-				if err != nil {
-					if errors.IsNotFound(err) {
-						return true, nil
-					}
-					return false, nil
-				}
-				return false, nil
-			}); err != nil {
-			clog.Info("[After] delete project namespace timeout, %v", err)
-			return err
-		}
-	}
-
 	p := tenantv1.Project{}
 	p.Name = framework.ProjectName
 	err = pivotCli.Direct().Delete(ctx, &p)
@@ -365,31 +318,6 @@ func clearResources() error {
 
 	// 5.删除租户
 	clog.Info("[After] delete tenant %v", framework.TenantName)
-	tns := corev1.Namespace{}
-	tns.Name = tenantNamespace
-	err = pivotCli.Direct().Delete(ctx, &tns)
-	if err != nil {
-		if !errors.IsNotFound(err) {
-			clog.Info("[After] delete tenant namespace fail, %v", err)
-			return err
-		}
-	} else {
-		if err = wait.Poll(waitInterval, waitTimeout,
-			func() (bool, error) {
-				var nsTemp corev1.Namespace
-				err := pivotCli.Direct().Get(ctx, types.NamespacedName{Name: tenantNamespace}, &nsTemp)
-				if err != nil {
-					if errors.IsNotFound(err) {
-						return true, nil
-					}
-					return false, nil
-				}
-				return false, nil
-			}); err != nil {
-			clog.Info("[After] delete tenant namespace timeout, %v", err)
-			return err
-		}
-	}
 	t := tenantv1.Tenant{}
 	t.Name = framework.TenantName
 	err = pivotCli.Direct().Delete(ctx, &t)
