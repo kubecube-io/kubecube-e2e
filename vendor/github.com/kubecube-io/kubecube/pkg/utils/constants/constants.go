@@ -26,6 +26,8 @@ const (
 	// ApiPathRoot the root api route
 	ApiPathRoot = "/api/v1/cube"
 
+	ApiK8sProxyPath = "/api/v1/cube/kubernetes"
+
 	// LocalCluster the internal cluster where program stand with
 	LocalCluster = "_local_cluster"
 
@@ -40,6 +42,9 @@ const (
 	HttpHeaderContentType        = "Content-type"
 	HttpHeaderContentDisposition = "Content-Disposition"
 	HttpHeaderContentTypeOctet   = "application/octet-stream"
+	HttpHeaderTransferEncoding   = "Transfer-Encoding"
+	HttpHeaderChunked            = "chunked"
+	HttpHeaderTextHtml           = "text/html"
 
 	ImpersonateUserKey  = "Impersonate-User"
 	ImpersonateGroupKey = "Impersonate-Group"
@@ -105,6 +110,9 @@ const (
 
 	// ProjectLabel represent which project resource relate with
 	ProjectLabel = "kubecube.io/project"
+
+	// PlatformLabel represent which project resource relate with
+	PlatformLabel = "kubecube.io/platform"
 
 	// TenantNsPrefix represent the namespace which relate with tenant
 	TenantNsPrefix = "kubecube-tenant-"
@@ -242,4 +250,14 @@ const (
 	NotReadyPodStatus    = "NotReady"
 	UnknownPodStatus     = "Unknown"
 	TerminatingPodStatus = "Terminating"
+)
+
+const (
+	TrueStr  = "true"
+	FalseStr = "false"
+)
+
+const (
+	// LabelRelationship mark a RoleBinding or ClusterRoleBindings belongs
+	LabelRelationship = "user.kubecube.io/relationship"
 )

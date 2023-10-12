@@ -6,7 +6,7 @@ require (
 	github.com/dchest/uniuri v1.2.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/igm/sockjs-go v3.0.2+incompatible
-	github.com/kubecube-io/kubecube v1.4.1-0.20230908120147-e7195640cd72
+	github.com/kubecube-io/kubecube v1.4.1-0.20231012080306-a6f15c9fcba1
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.27.7
 	github.com/spf13/viper v1.11.0
@@ -27,7 +27,6 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	sigs.k8s.io/hierarchical-namespaces v1.0.0 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 )
 

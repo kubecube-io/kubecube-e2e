@@ -105,7 +105,7 @@ github.com/josharian/intern
 # github.com/json-iterator/go v1.1.12
 ## explicit; go 1.12
 github.com/json-iterator/go
-# github.com/kubecube-io/kubecube v1.4.1-0.20230908120147-e7195640cd72
+# github.com/kubecube-io/kubecube v1.4.1-0.20231012080306-a6f15c9fcba1
 ## explicit; go 1.20
 github.com/kubecube-io/kubecube/pkg/apis
 github.com/kubecube-io/kubecube/pkg/apis/cluster/v1
@@ -119,11 +119,13 @@ github.com/kubecube-io/kubecube/pkg/clog
 github.com/kubecube-io/kubecube/pkg/conversion
 github.com/kubecube-io/kubecube/pkg/multicluster
 github.com/kubecube-io/kubecube/pkg/multicluster/client
+github.com/kubecube-io/kubecube/pkg/multicluster/client/config
 github.com/kubecube-io/kubecube/pkg/multicluster/client/fake
 github.com/kubecube-io/kubecube/pkg/multicluster/client/fake/cache
 github.com/kubecube-io/kubecube/pkg/multicluster/scout
 github.com/kubecube-io/kubecube/pkg/utils
 github.com/kubecube-io/kubecube/pkg/utils/constants
+github.com/kubecube-io/kubecube/pkg/utils/env
 github.com/kubecube-io/kubecube/pkg/utils/exit
 github.com/kubecube-io/kubecube/pkg/utils/informer
 github.com/kubecube-io/kubecube/pkg/utils/keys
@@ -907,9 +909,6 @@ sigs.k8s.io/controller-runtime/pkg/webhook
 sigs.k8s.io/controller-runtime/pkg/webhook/admission
 sigs.k8s.io/controller-runtime/pkg/webhook/conversion
 sigs.k8s.io/controller-runtime/pkg/webhook/internal/metrics
-# sigs.k8s.io/hierarchical-namespaces v1.0.0
-## explicit; go 1.17
-sigs.k8s.io/hierarchical-namespaces/api/v1alpha2
 # sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd
 ## explicit; go 1.18
 sigs.k8s.io/json
