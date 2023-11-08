@@ -1,3 +1,19 @@
+# V1.1.0
+
+2023-11-08
+
+## Feature
+- Feat remove hnc  [#17](https://github.com/kubecube-io/kubecube-e2e/pull/17)
+- update k8s mod to 1.27 [#16](https://github.com/kubecube-io/kubecube-e2e/pull/16)
+
+## Dependencies
+
+- kubecube 1.9.0
+- ginkgo 1.16.5
+- gomega 1.29.0
+- k8s 1.27.4
+- viper 1.17.0
+
 # V1.0.7
 
 2023-08-08
