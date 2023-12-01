@@ -171,7 +171,7 @@ func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestR
 					TestResultInstance.Set(key, e2econstants.ConfigMapTestFailValue)
 				}
 			}
-			exec := func(step *MultiUserTestStep, testFunc TestFunc) TestResp {
+			exec := func(step MultiUserTestStep, testFunc TestFunc) TestResp {
 				finish := false
 				var resp TestResp
 				defer func() {
@@ -207,12 +207,12 @@ func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestR
 						ginkgo.By(step.Description)
 					}
 					clog.Info("running init step as %s \n", getUser)
-					exec(step, step.StepFunc)
+					exec(*step, step.StepFunc)
 				})
 			}
 
 			for _, s := range test.Steps {
-				step := &s
+				step := s
 				ginkgo.It(user+" : "+step.Name, func() {
 					if flag {
 						clog.Info("step before failed, skipping remaining steps")
@@ -247,7 +247,7 @@ func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestR
 						ginkgo.By(step.Description)
 					}
 					clog.Info("running final step as %s \n", getUser)
-					exec(step, step.StepFunc)
+					exec(*step, step.StepFunc)
 				})
 			}
 		})
