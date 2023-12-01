@@ -180,9 +180,6 @@ func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestR
 						clog.Info("test failed, test is %s" + user + "-" + test.TestName)
 						setTestResult(!expect)
 						return
-					} else {
-						clog.Info("test %s is passed", user+"-"+test.TestName)
-						setTestResult(expect)
 					}
 					if !finish {
 						clog.Info("test is not finish, that means it failed, test is %s" + user + "-" + test.TestName)
@@ -194,6 +191,8 @@ func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestR
 						setTestResult(!expect)
 						return
 					}
+					clog.Info("test %s is passed", user+"-"+test.TestName)
+					setTestResult(expect)
 				}()
 				resp = testFunc(getUser)
 				// if test use Expect and fail, it will be panic, that means finish wili be false, and test is failed
