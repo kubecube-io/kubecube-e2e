@@ -17,7 +17,7 @@ limitations under the License.
 package framework
 
 import (
-	"crypto/tls"
+	"github.com/kubecube-io/kubecube/pkg/utils/ctls"
 	"net/http"
 	"sync"
 	"time"
@@ -58,11 +58,8 @@ func NewHttpHelper() *HttpHelper {
 		User:         AuthUser{Username: User, Password: UserPassword},
 	}
 
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
 	h.Client = http.Client{
-		Transport: tr,
+		Transport: ctls.MakeInsecureTransport(),
 		Timeout:   30 * time.Second,
 	}
 	return h

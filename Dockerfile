@@ -19,5 +19,4 @@ FROM alpine:3.18
 WORKDIR /workspace
 ENV TZ Asia/Shanghai
 COPY --from=builder /workspace/cube.test .
-COPY tomcat-10.3.10.tgz tomcat-10.3.10.tgz
 CMD ["/workspace/cube.test", "-test.v"]

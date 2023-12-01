@@ -21,13 +21,13 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/kubecube-io/kubecube/pkg/utils/constants"
-
 	"github.com/kubecube-io/kubecube-e2e/e2e/framework"
+	e2econstants "github.com/kubecube-io/kubecube-e2e/util/constants"
 	quotav1 "github.com/kubecube-io/kubecube/pkg/apis/quota/v1"
 	v1 "github.com/kubecube-io/kubecube/pkg/apis/quota/v1"
 	tenantv1 "github.com/kubecube-io/kubecube/pkg/apis/tenant/v1"
 	"github.com/kubecube-io/kubecube/pkg/clog"
+	"github.com/kubecube-io/kubecube/pkg/utils/constants"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -247,6 +247,11 @@ func initializeResources() error {
 	if err != nil {
 		return err
 	}
+	// 11.create configmap
+	err = framework.CreateConfigMap(ctx)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -380,5 +385,48 @@ func clearResources() error {
 	if err != nil {
 		return err
 	}
+	// 8. delete other ConfigMap
+	// list configmap by label: test.kubecube.io/e2e: "true"
+	configMapList, err := framework.ListConfigMap(ctx)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+	// if configmap exist but name is not kubecube-e2e-${controller-uid}, delete it
+	for _, configMap := range configMapList.Items {
+		if configMap.Name != framework.GetConfigMapName() {
+			err := pivotCli.Direct().Delete(ctx, &configMap)
+			if err != nil && errors.IsNotFound(err) {
+				return err
+			}
+		}
+	}
 	return nil
+}
+
+func deleteTestConfigMap() {
+	// get configmap
+	// if test all pass, delete the configmap
+	configMap := &corev1.ConfigMap{}
+	err := framework.PivotClusterClient.Direct().Get(context.Background(), types.NamespacedName{Name: framework.GetConfigMapName(), Namespace: framework.KubeCubeSystem}, configMap)
+	if err != nil {
+		clog.Error("get configmap error: %v", err)
+		return
+	}
+	pass := true
+	for _, value := range configMap.Data {
+		if value != e2econstants.ConfigMapTestPassValue {
+			pass = false
+			break
+		}
+	}
+	if pass {
+		err := framework.PivotClusterClient.Direct().Delete(context.Background(), configMap)
+		if err != nil {
+			clog.Error("delete configmap error: %v", err)
+			return
+		}
+	}
 }

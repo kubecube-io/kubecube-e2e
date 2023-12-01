@@ -20,3 +20,12 @@ const (
 	GeneralLoginType    = "GeneralLogin"
 	AuthorizationHeader = "Authorization"
 )
+
+const (
+	ConfigMapLabelKey      = "test.kubecube.io/e2e"
+	ConfigMapLabelValue    = "true"
+	ConfigMapNamePrefix    = "kubecube-e2e-"
+	ConfigMapTestPassValue = "pass"
+	ConfigMapTestFailValue = "fail"
+	ConfigMapTestResultKey = "result"
+)
