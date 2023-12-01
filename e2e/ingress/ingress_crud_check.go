@@ -281,11 +281,23 @@ var multiUserIngressCRUDTest = framework.MultiUserTest{
 		Name:        "创建 deploy 和 svc",
 		Description: "创建 deploy 和 svc",
 		StepFunc:    createDeployAndSvc1,
+		ExpectPass: map[string]bool{
+			framework.UserAdmin:        true,
+			framework.UserTenantAdmin:  true,
+			framework.UserProjectAdmin: true,
+			framework.UserNormal:       true,
+		},
 	},
 	FinalStep: &framework.MultiUserTestStep{
 		Name:        "删除 deploy 和 svc",
 		Description: "删除 deploy 和 svc",
 		StepFunc:    deleteDeployAndSvc1,
+		ExpectPass: map[string]bool{
+			framework.UserAdmin:        true,
+			framework.UserTenantAdmin:  true,
+			framework.UserProjectAdmin: true,
+			framework.UserNormal:       true,
+		},
 	},
 	Steps: []framework.MultiUserTestStep{
 		{

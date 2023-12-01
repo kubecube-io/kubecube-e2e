@@ -304,11 +304,23 @@ var multiUserServiceCRUDTest = framework.MultiUserTest{
 		Name:        "创建 deploy1 deploy2",
 		Description: "创建 deploy1 deploy2",
 		StepFunc:    createDeploy1AndDeploy2,
+		ExpectPass: map[string]bool{
+			framework.UserAdmin:        true,
+			framework.UserTenantAdmin:  true,
+			framework.UserProjectAdmin: true,
+			framework.UserNormal:       true,
+		},
 	},
 	FinalStep: &framework.MultiUserTestStep{
 		Name:        "删除 deploy1 deploy2",
 		Description: "删除 deploy1 deploy2",
 		StepFunc:    deleteDeploy1AndDeploy2,
+		ExpectPass: map[string]bool{
+			framework.UserAdmin:        true,
+			framework.UserTenantAdmin:  true,
+			framework.UserProjectAdmin: true,
+			framework.UserNormal:       true,
+		},
 	},
 	Steps: []framework.MultiUserTestStep{
 		{

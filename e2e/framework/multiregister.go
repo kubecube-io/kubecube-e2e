@@ -20,6 +20,7 @@ import (
 	"errors"
 	"os"
 
+	e2econstants "github.com/kubecube-io/kubecube-e2e/util/constants"
 	"github.com/kubecube-io/kubecube/pkg/clog"
 	"github.com/onsi/ginkgo"
 	"gopkg.in/yaml.v3"
@@ -105,6 +106,7 @@ func OutputMultiUserTestConfig(path string) error {
 
 func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestResp), user string, beforeEach, afterEach func(), skipFunc func() bool) {
 	_ = ginkgo.Describe(test.TestName, func() {
+		key := user + "-" + test.TestName
 		testExampleConfiguredByUser, ok := ToTestMap[test.TestName]
 		if !ok {
 			clog.Info("no test named detected %s", test.TestName)
@@ -116,6 +118,19 @@ func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestR
 			return
 		}
 
+		// get configmap
+		// get run result: jobUid+user+funcName
+		// if exist and result is pass, skip it
+		// if not exist or result is not pass, run it
+		// defer func() {
+		// if err != nil , write to configmap pass, else write to configmap fail
+		//}
+		val, ok := TestResultInstance.Get(key)
+		if ok && val == e2econstants.ConfigMapTestPassValue {
+			clog.Info("test %s is passed, skip it", test.TestName)
+			return
+		}
+		TestResultInstance.Remove(key)
 		if skipFunc() {
 			clog.Info("test is skipped by skip func %s", test.TestName)
 			return
@@ -143,7 +158,53 @@ func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestR
 
 		ginkgo.Context("测试用例", func() {
 			getUser := GetUser(user)
-
+			setTestResult := func(pass bool) {
+				if pass {
+					// get test result
+					// if test result not exist, write pass
+					// if test result exist, do not write result, avoid overwrite previous pass or fail result
+					_, ok := TestResultInstance.Get(key)
+					if !ok {
+						TestResultInstance.Set(key, e2econstants.ConfigMapTestPassValue)
+					}
+				} else {
+					TestResultInstance.Set(key, e2econstants.ConfigMapTestFailValue)
+				}
+			}
+			exec := func(step MultiUserTestStep, testFunc TestFunc) TestResp {
+				finish := false
+				var resp TestResp
+				defer func() {
+					expect := false
+					if val, ok := testExampleConfiguredByUser[step.Name]; ok {
+						expect = val.ExpectPass[user]
+					} else {
+						// it is init step or final step
+						expect = true
+					}
+					if ginkgo.CurrentGinkgoTestDescription().Failed {
+						clog.Info("test failed, test is %s" + user + "-" + test.TestName)
+						setTestResult(!expect)
+						return
+					}
+					if !finish {
+						clog.Info("test is not finish, that means it failed, test is %s" + user + "-" + test.TestName)
+						setTestResult(!expect)
+						return
+					}
+					if resp.Err != nil {
+						clog.Info("test res has error, that means it failed, test is %s" + user + "-" + test.TestName)
+						setTestResult(!expect)
+						return
+					}
+					clog.Info("test %s is passed", user+"-"+test.TestName)
+					setTestResult(expect)
+				}()
+				resp = testFunc(getUser)
+				// if test use Expect and fail, it will be panic, that means finish wili be false, and test is failed
+				finish = true
+				return resp
+			}
 			if test.InitStep != nil {
 				step := test.InitStep
 				ginkgo.It(user+" : "+step.Name, func() {
@@ -151,7 +212,7 @@ func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestR
 						ginkgo.By(step.Description)
 					}
 					clog.Info("running init step as %s \n", getUser)
-					step.StepFunc(getUser)
+					exec(*step, step.StepFunc)
 				})
 			}
 
@@ -168,9 +229,8 @@ func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestR
 					}
 
 					testFunc := step.StepFunc
-
 					clog.Info("running %s step %s as %s", test.TestName, step.Name, getUser)
-					resp := testFunc(getUser)
+					resp := exec(step, testFunc)
 					if !userTestFromConfig.ContinueIfError && resp.Err != nil {
 						flag = true
 					}
@@ -192,7 +252,7 @@ func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestR
 						ginkgo.By(step.Description)
 					}
 					clog.Info("running final step as %s \n", getUser)
-					step.StepFunc(getUser)
+					exec(*step, step.StepFunc)
 				})
 			}
 		})

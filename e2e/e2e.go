@@ -84,22 +84,34 @@ func InitAll() error {
 // Start 执行 e2e 测试的前置步骤
 func Start() error {
 	if !isMaster {
-		return waitUntilResourceInited()
+		err := waitUntilResourceInited()
+		if err != nil {
+			return err
+		}
+		return framework.TestResultInstance.Init()
 	}
 
-	clearResources()
+	_ = clearResources()
 	err := initializeResources()
 	if err != nil {
 		markAllResourceInitFailed()
 		return err
 	}
-
+	err = framework.TestResultInstance.Init()
+	if err != nil {
+		return err
+	}
 	markAllResourceInited()
 	return nil
 }
 
 // End 清理测试数据
 func End() error {
+	err := framework.TestResultInstance.End()
+	if err != nil {
+		clog.Error(err.Error())
+		return err
+	}
 	if !isMaster {
 		markAllTestInThisWorkerFinished()
 		return nil
@@ -107,12 +119,14 @@ func End() error {
 		waitUntilTestsInAllWorkersFinished()
 	}
 
-	err := clearResources()
+	err = clearResources()
 	if err != nil {
 		return err
 	}
 
 	markAllResourceCleared()
+	deleteTestConfigMap()
+
 	return nil
 }
 

@@ -21,6 +21,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/kubecube-io/kubecube/pkg/conversion"
+	"k8s.io/apimachinery/pkg/types"
 	"os"
 	"time"
 
@@ -274,4 +275,64 @@ func CreateSecret() error {
 		return err
 	}
 	return nil
+}
+
+func ListConfigMap(ctx context.Context) (*corev1.ConfigMapList, error) {
+	// list configmap by label: test.kubecube.io/e2e: "true"
+	configMapList := &corev1.ConfigMapList{}
+	err := PivotClusterClient.Direct().List(ctx, configMapList, ctrlclient.MatchingLabels{e2econstants.ConfigMapLabelKey: e2econstants.ConfigMapLabelValue})
+	if err != nil {
+		return nil, err
+	}
+	return configMapList, nil
+}
+func GetConfigMapName() string {
+	return e2econstants.ConfigMapNamePrefix + GetControllerUid()
+}
+
+func CreateConfigMap(ctx context.Context) error {
+	// create configmap, to record the result of test
+	// if the configmap is not exist, create it
+	// if the configmap is exist continue
+	// configmap name: kubecube-e2e-${controller-uid}
+	// configmap label: test.kubecube.io/e2e: "true"
+	// ownerReference: Job
+	configMap := &corev1.ConfigMap{}
+	err := PivotClusterClient.Direct().Get(ctx, types.NamespacedName{Name: GetConfigMapName(), Namespace: KubeCubeSystem}, configMap)
+	if err != nil {
+		if !errors.IsNotFound(err) {
+			return err
+		}
+		configMap = &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      GetConfigMapName(),
+				Namespace: KubeCubeSystem,
+				Labels: map[string]string{
+					e2econstants.ConfigMapLabelKey: e2econstants.ConfigMapLabelValue,
+				},
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: "batch/v1",
+						Kind:       "Job",
+						Name:       GetJobName(),
+						UID:        types.UID(GetControllerUid()),
+					},
+				},
+			},
+			Data: map[string]string{},
+		}
+		err = PivotClusterClient.Direct().Create(ctx, configMap)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func GetConfigMap(ctx context.Context) (*corev1.ConfigMap, error) {
+	configMap := &corev1.ConfigMap{}
+	err := PivotClusterClient.Direct().Get(ctx, types.NamespacedName{Name: GetConfigMapName(), Namespace: KubeCubeSystem}, configMap)
+	if err != nil {
+		return nil, err
+	}
+	return configMap, nil
 }
