@@ -175,7 +175,13 @@ func generateSingleUserTestExample(test MultiUserTest, errorFunc func(resp TestR
 				finish := false
 				var resp TestResp
 				defer func() {
-					expect := testExampleConfiguredByUser[step.Name].ExpectPass[user]
+					expect := false
+					if val, ok := testExampleConfiguredByUser[step.Name]; ok {
+						expect = val.ExpectPass[user]
+					} else {
+						// it is init step or final step
+						expect = true
+					}
 					if ginkgo.CurrentGinkgoTestDescription().Failed {
 						clog.Info("test failed, test is %s" + user + "-" + test.TestName)
 						setTestResult(!expect)
