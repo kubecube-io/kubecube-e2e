@@ -242,11 +242,23 @@ var multiUserServiceNodeportTest = framework.MultiUserTest{
 		Name:        "创建 nodeport",
 		Description: "创建 nodeport",
 		StepFunc:    createDeployAndServiceForNodeport,
+		ExpectPass: map[string]bool{
+			framework.UserAdmin:        true,
+			framework.UserTenantAdmin:  true,
+			framework.UserProjectAdmin: true,
+			framework.UserNormal:       true,
+		},
 	},
 	FinalStep: &framework.MultiUserTestStep{
 		Name:        "删除 nodeport",
 		Description: "删除 nodeport",
 		StepFunc:    deleteDeployAndServiceForNodeport,
+		ExpectPass: map[string]bool{
+			framework.UserAdmin:        true,
+			framework.UserTenantAdmin:  true,
+			framework.UserProjectAdmin: true,
+			framework.UserNormal:       true,
+		},
 	},
 	Steps: []framework.MultiUserTestStep{
 		{

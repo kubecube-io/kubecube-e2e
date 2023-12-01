@@ -158,11 +158,23 @@ var multiUserIngressEventTest = framework.MultiUserTest{
 		Name:        "创建 deploy svc ingress",
 		Description: "创建 deploy svc ingress",
 		StepFunc:    createDeployAndSvcAndIngress,
+		ExpectPass: map[string]bool{
+			framework.UserAdmin:        true,
+			framework.UserTenantAdmin:  true,
+			framework.UserProjectAdmin: true,
+			framework.UserNormal:       true,
+		},
 	},
 	FinalStep: &framework.MultiUserTestStep{
 		Name:        "删除 deploy svc ingress",
 		Description: "删除 deploy svc ingress",
 		StepFunc:    deleteDeployAndSvcAndIngress,
+		ExpectPass: map[string]bool{
+			framework.UserAdmin:        true,
+			framework.UserTenantAdmin:  true,
+			framework.UserProjectAdmin: true,
+			framework.UserNormal:       true,
+		},
 	},
 	Steps: []framework.MultiUserTestStep{
 		{
